@@ -1,8 +1,13 @@
-/* ===== AUTHENTIK GLASSMORPHISM THEME - V3.1 (2026.x compat) ===== */
+/* ===== AUTHENTIK GLASSMORPHISM THEME - V3.1.1 (2026.x compat) ===== */
 
 /*
    Glassmorphism theme for Authentik.
    Tested on Authentik 2026.2.3. Upload via Admin -> System -> Brands -> Custom CSS.
+
+   V3.1.1 (cleanup): dedup of redundant :host rules, merged the two
+   @media (max-width: 768px) blocks, consolidated :root shadow-piercing
+   variables into one block. No behavioral change.
+
    V3.1: cleanup of invalid CSS + support for 2026.x new components
    (ak-flow-card, ak-form-static, ak-flow-input-password, ak-locale-select,
    ak-tabs vertical, ak-empty-state, pf-m-block buttons, pf-c-tabs__link).

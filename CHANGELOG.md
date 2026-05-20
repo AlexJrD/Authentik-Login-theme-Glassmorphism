@@ -2,6 +2,46 @@
 
 All notable changes to this theme are documented in this file.
 
+Format: [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PATCH).
+
+## [V3.1.1] — 2026-05-20 (cleanup release)
+
+### Refactor — code hygiene, no behavioral change
+
+- **Deduplicated** redundant `:host(...)` rule blocks introduced during iterative
+  patches: merged the two `:host(ak-flow-card)` blocks into one, merged the two
+  `:host(ak-locale-select)` blocks (layout + color + select styling now in a single
+  cohesive rule), merged `:host(ak-form-static) .links a` definitions.
+- **Merged** the two `@media (max-width: 768px)` blocks into a single consolidated
+  block at the bottom of the file. The mobile rules for `pf-c-form__actions` and
+  `ak-stage-user-login` buttons that were in the first block now live alongside
+  the rest of the mobile overrides.
+- **Consolidated** the two `:root` "shadow-piercing" CSS variable blocks (login-flow
+  vars + form/table/tooltip vars) into one. Now all PatternFly variables live in a
+  single `:root` block in the "PATTERNFLY CSS VARS" section.
+- **No selector or property removed** — only structural cleanup. The cascade order
+  is preserved; visual output is byte-for-byte identical to V3.1.
+
+### Documentation
+
+- Added **mobile screenshots** to the README (login identification, login password,
+  dashboard, user settings) in a 2×2 table layout.
+- Renamed README section "Previews" with explicit subsections **🖥️ Desktop** and **📱 Mobile**.
+- Updated all version references from `V3.1` to `V3.1.1`.
+
+### Stats
+
+| Metric | V3.1 | V3.1.1 |
+|---|---|---|
+| Lines | 3177 | ~3167 (−10) |
+| Brace balance | 266 / 266 | 260 / 260 ✅ |
+| `:host(ak-flow-card) {` blocks | 2 | 1 |
+| `:host(ak-locale-select) {` blocks | 2 | 1 |
+| `@media (max-width: 768px)` blocks | 2 | 1 |
+| Mobile screenshots | 1 | 4 |
+
+---
+
 ## [V3.1] — 2026-05-20 (Authentik 2026.2.3 compatibility fork)
 
 ### Context

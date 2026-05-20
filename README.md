@@ -2,13 +2,13 @@
 
 A custom **glassmorphism** login theme for [Authentik](https://goauthentik.io/).
 
-> ✅ **V3.1** — Tested and fully compatible with **Authentik 2026.2.3**
+> ✅ **V3.1.1** — Tested and fully compatible with **Authentik 2026.2.3**
 >
 > Forked from the original [VULGA01/Authentik-Login-theme-Glassmorphism](https://github.com/VULGA01/Authentik-Login-theme-Glassmorphism) (tested on 2025.10.3) and updated for the new Shadow DOM architecture introduced in Authentik 2026.x.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Authentik version](https://img.shields.io/badge/Authentik-2026.2.3-orange)
-![Version](https://img.shields.io/badge/version-V3.1-blue)
+![Version](https://img.shields.io/badge/version-V3.1.1-blue)
 
 ## 📸 Previews
 
@@ -55,12 +55,12 @@ A custom **glassmorphism** login theme for [Authentik](https://goauthentik.io/).
 
 | Authentik version | Status | Notes |
 |---|---|---|
-| **2026.2.3** | ✅ Fully tested | This fork — V3.1 |
+| **2026.2.3** | ✅ Fully tested | This fork — V3.1.1 |
 | 2026.x (other minor) | 🟢 Likely OK | Same Shadow DOM architecture |
 | 2025.10.3 | 🟡 Use V3.0 from [original repo](https://github.com/VULGA01/Authentik-Login-theme-Glassmorphism) | Older DOM structure |
 | ≤ 2025.x earlier | 🟡 Use V3.0 from [original repo](https://github.com/VULGA01/Authentik-Login-theme-Glassmorphism) | Older DOM structure |
 
-## ✨ Features (V3.1)
+## ✨ Features (V3.1.1)
 
 - **Modern glassmorphism design** — `backdrop-filter` blur, semi-transparent glass cards, elegant shadows.
 - **Full responsiveness** — Optimized for desktop, tablet, and mobile (including iOS quirks).
@@ -125,7 +125,7 @@ For these, only a JavaScript injection or an upstream PR to Authentik could fix 
 
 See [CHANGELOG.md](./CHANGELOG.md) for the full version history.
 
-### Summary of V3.1 vs V3.0
+### Summary of V3.1.x vs V3.0
 
 - 🔴 **Bugs fixed**: 3 invalid `:contains()` rules + 1 broken CSS block + brace imbalance
 - 🟠 **Dead code removed**: 9 duplicate rule groups, 4 non-existent host selectors
