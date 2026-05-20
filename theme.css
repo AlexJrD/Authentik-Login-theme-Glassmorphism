@@ -501,22 +501,9 @@ body:has(.pf-c-login) button[type="button"]:first-of-type,
         0 0 0 2px rgba(66, 133, 244, 0.2) !important;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-
-    .pf-c-login .pf-c-form__actions,
-    body:has(.pf-c-login) .pf-c-form__actions {
-        flex-direction: column !important;
-        gap: 12px !important;
-    }
-
-    :host(ak-stage-user-login) .pf-c-button.pf-m-primary,
-    :host(ak-stage-user-login) .pf-c-button.pf-m-secondary {
-        width: 100% !important;
-        min-width: auto !important;
-        padding: 14px 28px !important;
-    }
-}
+/* (Mobile-specific button rules for ak-stage-user-login + form__actions are
+   in the consolidated @media (max-width: 768px) block at the bottom of this
+   file — see "RESPONSIVE MOBILE" section.) */
 
 /* ===== RADIO & CHECKBOX (REMEMBER ME) ===== */
 
@@ -1353,14 +1340,9 @@ ak-interface-user-presentation::part(background-default-slant) {
    - `:host(ak-flow-executor) .pf-c-login__main` matches inside the shadow root.
    We write both so it works whichever way the CSS is injected. */
 
-/* Inherited CSS variables (work through shadow boundaries if not redefined) */
-:root,
-html,
-body {
-    --pf-c-login__main--BackgroundColor: transparent;
-    --pf-c-login__main--BoxShadow: none;
-    --pf-c-login__main--Color: white;
-}
+/* (Login-flow CSS variables for shadow-piercing are consolidated in the
+   "PATTERNFLY CSS VARS (shadow-piercing)" block further below — see the
+   --pf-c-login__main--* vars there.) */
 
 /* (a) Match if CSS is injected at document level — CONFIRMED working by user test:
    `getComputedStyle(...shadowRoot.querySelector('main[part="main"]')).background`
@@ -1556,6 +1538,7 @@ ak-flow-executor::part(locale-select-select) {
     width: auto !important;
     max-width: 280px !important;
     min-width: 180px !important;
+    color: rgba(255, 255, 255, 0.85) !important;
 }
 
 :host(ak-locale-select) label {
@@ -1573,10 +1556,22 @@ ak-flow-executor::part(locale-select-select) {
     fill: rgba(255, 255, 255, 0.7) !important;
 }
 
-:host(ak-locale-select) select {
+:host(ak-locale-select) select,
+:host(ak-locale-select) [part="select"] {
     width: auto !important;
     max-width: 140px !important;
     min-width: 80px !important;
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    color: white !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 8px !important;
+    padding: 4px 8px !important;
+    font-size: 13px !important;
+}
+
+:host(ak-locale-select) select option {
+    background-color: #1f1f1f !important;
+    color: white !important;
 }
 
 
@@ -2256,11 +2251,9 @@ ak-app-icon::part(icon image) {
     display: block !important;
 }
 
-/* --- <ak-flow-card>: new Shadow DOM wrapper around each stage (2026.x) --- */
-:host(ak-flow-card) {
-    display: block !important;
-}
-
+/* --- <ak-flow-card>: text colors inside the wrapper. The host element itself
+   already has `display: block + background: transparent` declared earlier
+   (see ak-flow-card transparency section). --- */
 :host(ak-flow-card) .pf-c-title,
 :host(ak-flow-card) h1,
 :host(ak-flow-card) label,
@@ -2284,8 +2277,7 @@ ak-app-icon::part(icon image) {
 }
 
 :host(ak-form-static) .primary-content,
-:host(ak-form-static) .username,
-:host(ak-form-static) .links a {
+:host(ak-form-static) .username {
     color: white !important;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
 }
@@ -2297,6 +2289,8 @@ ak-app-icon::part(icon image) {
 }
 
 :host(ak-form-static) .links a {
+    color: white !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
     opacity: 0.85;
     transition: opacity 0.2s ease;
 }
@@ -2328,30 +2322,6 @@ ak-app-icon::part(icon image) {
 :host(ak-flow-input-password) .pf-c-form-control:focus {
     border-color: rgba(102, 126, 234, 0.5) !important;
     background-color: rgba(255, 255, 255, 0.08) !important;
-}
-
-/* --- <ak-locale-select>: language picker at top of flow card --- */
-:host(ak-locale-select) {
-    color: rgba(255, 255, 255, 0.85) !important;
-}
-
-:host(ak-locale-select) select,
-:host(ak-locale-select) [part="select"] {
-    background-color: rgba(255, 255, 255, 0.08) !important;
-    color: white !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-radius: 8px !important;
-    padding: 4px 8px !important;
-    font-size: 13px !important;
-}
-
-:host(ak-locale-select) select option {
-    background-color: #1f1f1f !important;
-    color: white !important;
-}
-
-:host(ak-locale-select) svg.icon {
-    fill: rgba(255, 255, 255, 0.7) !important;
 }
 
 /* --- <ak-tabs>: new container hosting .pf-c-tabs (vertical for user settings) --- */
@@ -2535,6 +2505,11 @@ body {
     --pf-c-form__label--Color: white;
     --pf-c-form__label-text--Color: white;
     --pf-c-form__label-required--Color: #ff6b6b;
+
+    /* Login flow main box (the <main part="main">) */
+    --pf-c-login__main--BackgroundColor: transparent;
+    --pf-c-login__main--BoxShadow: none;
+    --pf-c-login__main--Color: white;
 
     /* Tables (user-settings list views) */
     --pf-c-table--BackgroundColor: transparent;
@@ -2814,6 +2789,21 @@ body:not(:has(ak-flow-executor)) .pf-c-login__footer .pf-c-list {
 
 /* ===== RESPONSIVE MOBILE ===== */
 @media (max-width: 768px) {
+
+    /* Stack form action buttons vertically on small screens */
+    .pf-c-login .pf-c-form__actions,
+    body:has(.pf-c-login) .pf-c-form__actions {
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+
+    /* User-login stage buttons (Stay connected? Yes/No) — full width on mobile */
+    :host(ak-stage-user-login) .pf-c-button.pf-m-primary,
+    :host(ak-stage-user-login) .pf-c-button.pf-m-secondary {
+        width: 100% !important;
+        min-width: auto !important;
+        padding: 14px 28px !important;
+    }
 
     /* Mobile: glassmorphism on the shadow-DOM <main> via shadow part.
        Also prevent horizontal overflow caused by long button labels like

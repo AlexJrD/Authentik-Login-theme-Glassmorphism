@@ -12,20 +12,44 @@ A custom **glassmorphism** login theme for [Authentik](https://goauthentik.io/).
 
 ## 📸 Previews
 
-### Login — Identification
+### 🖥️ Desktop
+
+#### Login — Identification
 ![Login Identification](./screenshots/login-identification.jpg)
 
-### Login — Password
+#### Login — Password
 ![Login Password](./screenshots/login-password.jpg)
 
-### Login — MFA (WebAuthn)
+#### Login — MFA (WebAuthn)
 ![MFA WebAuthn](./screenshots/mfa-webauthn.jpg)
 
-### Application Dashboard (desktop)
+#### Application Dashboard
 ![Dashboard Desktop](./screenshots/dashboard-desktop.jpg)
 
-### Application Dashboard (mobile)
-<img src="./screenshots/dashboard-mobile.png" alt="Dashboard Mobile" width="300">
+### 📱 Mobile
+
+<table>
+  <tr>
+    <td align="center">
+      <strong>Login — Identification</strong><br>
+      <img src="./screenshots/login-identification-mobile.png" alt="Login Identification Mobile" width="240">
+    </td>
+    <td align="center">
+      <strong>Login — Password</strong><br>
+      <img src="./screenshots/login-password-mobile.png" alt="Login Password Mobile" width="240">
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <strong>Application Dashboard</strong><br>
+      <img src="./screenshots/dashboard-mobile.png" alt="Dashboard Mobile" width="240">
+    </td>
+    <td align="center">
+      <strong>User Settings</strong><br>
+      <img src="./screenshots/user-settings-mobile.png" alt="User Settings Mobile" width="240">
+    </td>
+  </tr>
+</table>
 
 ## ✅ Compatibility
 
