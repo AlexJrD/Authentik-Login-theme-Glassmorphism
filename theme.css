@@ -2679,6 +2679,47 @@ img.branding-logo,
     display: block !important;
 }
 
+/* ========================================= */
+/* === HEADER BRAND LOGO (top-left, user + admin interfaces) === */
+/* ========================================= */
+/* The header logo (<img class="pf-c-brand">) lives inside the shadow DOM of
+   <ak-interface-user> or <ak-interface-admin>. The wrapper <div part="brand">
+   is exposed via ::part(), so we enlarge it. The <img> itself uses PatternFly
+   CSS variables we can override at :root (they inherit through shadow roots). */
+
+ak-interface-user::part(brand),
+ak-interface-user-presentation::part(brand),
+ak-interface-admin::part(brand) {
+    min-height: 70px !important;
+    height: auto !important;
+    padding: 6px 0 !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+/* PatternFly variables controlling the header brand logo size.
+   These inherit through the shadow root and the logo <img> picks them up. */
+:root,
+html,
+body {
+    --pf-c-page__header-brand--c-brand--MaxHeight: 60px;
+    --pf-c-page__header-brand--c-brand--Height: 60px;
+    --pf-c-brand--Height: 60px;
+    --pf-c-brand--MaxHeight: 60px;
+}
+
+/* Fallback selectors in case Authentik DOES inject CSS into the interface
+   shadow roots — these match the <img> directly. */
+img.pf-c-brand,
+.pf-c-page__header-brand img,
+.pf-c-page__header-brand-link img {
+    max-height: 60px !important;
+    height: auto !important;
+    width: auto !important;
+    max-width: 200px !important;
+    object-fit: contain !important;
+}
+
 /* Center the .pf-c-login box on static pages (no ak-flow-executor wrapper).
    We use :not(:has(ak-flow-executor)) to scope to error pages only. */
 body:not(:has(ak-flow-executor)) .pf-c-page__drawer,
