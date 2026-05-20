@@ -1,8 +1,12 @@
-/* ===== AUTHENTIK GLASSMORPHISM THEME - V3.1.1 (2026.x compat) ===== */
+/* ===== AUTHENTIK GLASSMORPHISM THEME - V3.1.2 (2026.x compat) ===== */
 
 /*
    Glassmorphism theme for Authentik.
    Tested on Authentik 2026.2.3. Upload via Admin -> System -> Brands -> Custom CSS.
+
+   V3.1.2: brand logo size cap raised from 140x70 to 220x220 (square envelope)
+   so square/portrait logos display at their intended size. Landscape logos
+   are unaffected (max-width still 220).
 
    V3.1.1 (cleanup): dedup of redundant :host rules, merged the two
    @media (max-width: 768px) blocks, consolidated :root shadow-piercing
@@ -2661,12 +2665,17 @@ pf-tooltip {
 img.branding-logo,
 .pf-c-brand img,
 .pf-c-login__main-header.pf-c-brand img {
-    max-width: 140px !important;
-    max-height: 70px !important;
+    /* Equal max-width and max-height = square envelope.
+       object-fit: contain preserves the logo's aspect ratio:
+       - Square logos (1:1) fill the full 220x220 box
+       - Landscape wordmarks fill the width, height auto-adjusts
+       - Portrait logos fill the height, width auto-adjusts */
+    max-width: 220px !important;
+    max-height: 220px !important;
     width: auto !important;
     height: auto !important;
     object-fit: contain !important;
-    margin: 0 auto !important;
+    margin: 0 auto 16px auto !important;
     display: block !important;
 }
 

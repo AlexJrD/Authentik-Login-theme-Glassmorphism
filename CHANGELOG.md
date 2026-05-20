@@ -4,6 +4,34 @@ All notable changes to this theme are documented in this file.
 
 Format: [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PATCH).
 
+## [V3.1.2] — 2026-05-20 (brand logo size)
+
+### Changed
+
+- **Brand logo size cap raised** from `140×70 px` to `220×220 px` (square envelope).
+  Square logos (e.g. ZarAuth crown + wordmark) now display at their full intended
+  size instead of being squeezed into a landscape 140×70 frame.
+- `object-fit: contain` preserves the aspect ratio — landscape wordmarks still fill
+  the width 220 with auto-adjusted height; portrait logos do the opposite. Only
+  the bounding box grew.
+- `margin-bottom` increased from `12px` to `16px` for slightly more breathing room
+  between the logo and the page title.
+
+### Recommended source asset
+
+- **At least 600×600 px** (3× the display size) for crisp rendering on HiDPI/Retina
+  screens.
+- **PNG with transparent background** so the glass effect shows through.
+- File weight **< 50 KB** after optimization (TinyPNG or similar).
+
+### Stats
+
+- No new CSS rules added or removed.
+- Single rule modified at line ~2660 (`.branding-logo, .pf-c-brand img, ...`).
+- Brace balance: 260 / 260 ✅ unchanged.
+
+---
+
 ## [V3.1.1] — 2026-05-20 (cleanup release)
 
 ### Refactor — code hygiene, no behavioral change
