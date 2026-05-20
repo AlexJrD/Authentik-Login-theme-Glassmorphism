@@ -1,9 +1,11 @@
-/* ===== AUTHENTIK GLASSMORPHISM THEME - V1.1 (Badge Fix) ===== */
+/* ===== AUTHENTIK GLASSMORPHISM THEME - V3.1 (2026.x compat) ===== */
 
-/* 
-   This theme implements a modern glassmorphism look for Authentik.
-   It overrides standard PatternFly and Authentik components.
-   Please upload this file in the Authentik Admin Interface -> Customization -> Blueprints/Files.
+/*
+   Glassmorphism theme for Authentik.
+   Tested on Authentik 2026.2.3. Upload via Admin -> System -> Brands -> Custom CSS.
+   V3.1: cleanup of invalid CSS + support for 2026.x new components
+   (ak-flow-card, ak-form-static, ak-flow-input-password, ak-locale-select,
+   ak-tabs vertical, ak-empty-state, pf-m-block buttons, pf-c-tabs__link).
 */
 
 /* ===== EASY CUSTOMIZATION ===== */
@@ -401,15 +403,6 @@ body:has(.pf-c-login) button[type="button"]:first-of-type,
         inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
 }
 
-/* Z-index fix for text */
-:host(ak-stage-user-login) .pf-c-button.pf-m-primary *,
-:host(ak-stage-user-login) .pf-c-button.pf-m-secondary *,
-:host(ak-stage-identification) .pf-c-button.pf-m-primary *,
-:host(ak-stage-identification) .pf-c-button.pf-m-secondary * {
-    position: relative !important;
-    z-index: 2 !important;
-}
-
 /* ========================================= */
 /* SOCIAL LOGIN BUTTONS (GLASSMORPHISM)      */
 /* ========================================= */
@@ -506,19 +499,6 @@ body:has(.pf-c-login) button[type="button"]:first-of-type,
     box-shadow:
         0 8px 20px rgba(66, 133, 244, 0.35),
         0 0 0 2px rgba(66, 133, 244, 0.2) !important;
-}
-
-
-
-:host(ak-stage-user-login) .pf-c-button.pf-m-primary::after,
-:host(ak-stage-user-login) .pf-c-button.pf-m-secondary::after {
-    border: none !important;
-    display: none !important;
-}
-
-:host(ak-stage-user-login) .pf-c-button:focus,
-:host(ak-stage-user-login) .pf-c-button:active {
-    outline: none !important;
 }
 
 /* Responsive */
@@ -621,19 +601,10 @@ input[name*="remember"]:checked::after {
 }
 
 /* ===== HIDE 'Powered by authentik' ===== */
+/* :contains() removed — invalid CSS (jQuery only). The fallback rules below
+   (ak-brand-links, .pf-c-list.pf-m-inline) already hide the brand footer. */
 
-/* If text is in a span */
-span:contains("Propulsé par"),
-span:contains("Powered by") {
-    display: none !important;
-    visibility: hidden !important;
-    font-size: 0 !important;
-    line-height: 0 !important;
-}
-
-/* If it's in a <ul> list in footer */
-.pf-c-login__footer .pf-c-list.pf-m-inline,
-ul.pf-c-list.pf-m-inline li span:contains("authentik") {
+.pf-c-login__footer .pf-c-list.pf-m-inline {
     display: none !important;
     visibility: hidden !important;
 }
@@ -934,7 +905,7 @@ ak-loading-overlay {
 :host(ak-stage-authenticator-static) .pf-c-button.pf-m-primary,
 :host(ak-stage-prompt) .pf-c-button.pf-m-primary,
 /* FIX: Connect Button in User Settings */
-:host(ak-user-settings-source-oauth) .pf-c-button.pf-m-primary {
+:host(ak-user-settings-source) .pf-c-button.pf-m-primary {
     background: rgba(255, 255, 255, 0.15) !important;
     color: white !important;
     border: 1px solid rgba(255, 255, 255, 0.3) !important;
@@ -952,12 +923,10 @@ ak-loading-overlay {
     /* Force height */
     padding-top: 12px !important;
     padding-bottom: 12px !important;
-    padding-top: 12px !important;
-    padding-bottom: 12px !important;
 }
 
 /* FIX: Disconnect Button (Danger) in User Settings */
-:host(ak-user-settings-source-oauth) .pf-c-button.pf-m-danger {
+:host(ak-user-settings-source) .pf-c-button.pf-m-danger {
     background: rgba(220, 20, 60, 0.25) !important;
     /* Red tint */
     color: white !important;
@@ -973,7 +942,7 @@ ak-loading-overlay {
     text-transform: none !important;
 }
 
-:host(ak-user-settings-source-oauth) .pf-c-button.pf-m-danger:hover {
+:host(ak-user-settings-source) .pf-c-button.pf-m-danger:hover {
     background: rgba(220, 20, 60, 0.4) !important;
     /* Brighter red on hover */
     border-color: rgba(255, 100, 100, 0.6) !important;
@@ -1015,7 +984,6 @@ ak-loading-overlay {
     transform: translateY(-2px) !important;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2) !important;
     color: white !important;
-    color: white !important;
 }
 
 /* KEY ICON & GLITCH FIX */
@@ -1056,7 +1024,7 @@ ak-loading-overlay {
 :host(ak-form-element-horizontal) .pf-c-button.pf-m-primary:hover,
 :host(ak-stage-authenticator-static) .pf-c-button.pf-m-primary:hover,
 :host(ak-stage-prompt) .pf-c-button.pf-m-primary:hover,
-:host(ak-user-settings-source-oauth) .pf-c-button.pf-m-primary:hover {
+:host(ak-user-settings-source) .pf-c-button.pf-m-primary:hover {
     background: rgba(255, 255, 255, 0.25) !important;
     border-color: rgba(255, 255, 255, 0.4) !important;
     transform: translateY(-2px) !important;
@@ -1168,12 +1136,14 @@ ak-loading-overlay {
     border-bottom-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-:host(ak-user-settings) .pf-c-tabs__button {
+:host(ak-user-settings) .pf-c-tabs__button,
+:host(ak-user-settings) .pf-c-tabs__link {
     color: rgba(255, 255, 255, 0.7) !important;
 }
 
 :host(ak-user-settings) .pf-c-tabs__link.pf-m-current,
-:host(ak-user-settings) .pf-c-tabs__item.pf-m-current .pf-c-tabs__button {
+:host(ak-user-settings) .pf-c-tabs__item.pf-m-current .pf-c-tabs__button,
+:host(ak-user-settings) .pf-c-tabs__item.pf-m-current .pf-c-tabs__link {
     color: white !important;
     background: rgba(255, 255, 255, 0.1) !important;
     border-radius: 10px 10px 0 0 !important;
@@ -1236,50 +1206,377 @@ ak-loading-overlay {
 /* Only apply the fixed background to User Interface and Login flows */
 /* This automatically excludes the Admin Interface */
 
-/* REF-INSPIRED BACKGROUND STRATEGY */
-/* Apply background directly to the page wrapper, like in theme-ref-icon.css */
-.pf-c-page {
+/* ========================================= */
+/* === GLOBAL BACKGROUND (covers viewport) == */
+/* ========================================= */
+/* The background lives on html/body so it covers the full viewport in every
+   interface (login flow, user dashboard, user settings). Wrappers inside the
+   shadow DOM of ak-interface-user / ak-flow-executor stay transparent so the
+   body's background shows through. The admin interface has its own opaque
+   .pf-c-page background-color, so the body fond is hidden there. */
+
+html,
+body {
     background-image: var(--ak-flow-background) !important;
     background-size: cover !important;
     background-position: center !important;
     background-repeat: no-repeat !important;
     background-attachment: fixed !important;
+    background-color: #151515 !important;
+    min-height: 100vh !important;
 }
 
-/* HIJACK ADMIN PANEL: Remove background image in admin interface */
+/* User-facing interfaces must be transparent so the body's fond shows through */
+ak-interface-user,
+ak-interface-user-presentation {
+    display: block !important;
+    background: transparent !important;
+    min-height: 100vh !important;
+}
+
+/* Login flow specifically: lock to viewport height + width with no scroll.
+   width: 100vw on the host (and on every wrapper in the chain) is critical
+   because the locale picker uses position: absolute relative to this host —
+   if the host is narrower than the viewport, the `left: 50%` centering goes
+   off-center. */
+ak-flow-executor {
+    display: block !important;
+    background: transparent !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    overflow: hidden !important;
+    position: relative !important;
+    left: 0 !important;
+    right: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Kill the outer scroll on the page when a login flow is present. The form's
+   <main> is position:fixed and self-scrolling if needed. */
+body:has(ak-flow-executor),
+html:has(ak-flow-executor) {
+    overflow: hidden !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+}
+
+body:has(ak-flow-executor) .pf-c-page__drawer,
+body:has(ak-flow-executor) .pf-c-drawer,
+body:has(ak-flow-executor) .pf-c-drawer__main,
+body:has(ak-flow-executor) .pf-c-drawer__content,
+body:has(ak-flow-executor) .pf-c-drawer__body {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* .pf-c-page in login flow keeps the fond (no shadow DOM constraint there) */
+.pf-c-page {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* HIJACK ADMIN PANEL: opaque background hides the body fond in admin UI */
 :host(ak-interface-admin) .pf-c-page {
     background-image: none !important;
     background-color: var(--pf-global--BackgroundColor--100) !important;
 }
 
-/* DASHBOARD TRANSPARENCY FIX */
-/* Force variables to transparent inside the library/dashboard host AND user interface wrapper */
+/* DASHBOARD/SETTINGS TRANSPARENCY: clear all CSS vars and inner wrappers */
 :host(ak-library-impl),
-:host(ak-interface-user) {
+:host(ak-interface-user),
+:host(ak-interface-user-presentation) {
     --pf-global--BackgroundColor--100: transparent !important;
     --pf-c-page--BackgroundColor: transparent !important;
     --pf-c-page__main-section--BackgroundColor: transparent !important;
+    --pf-c-drawer--BackgroundColor: transparent !important;
 }
 
-/* DASHBOARD TRANSPARENCY FIX */
-/* Force variables to transparent inside the library/dashboard host AND user interface wrapper */
-:host(ak-library-impl),
-:host(ak-interface-user) {
-    --pf-global--BackgroundColor--100: transparent !important;
-    --pf-c-page--BackgroundColor: transparent !important;
-    --pf-c-page__main-section--BackgroundColor: transparent !important;
-}
-
-/* Force specific containers to be transparent in dashboard */
 :host(ak-library-impl) .pf-c-page,
 :host(ak-library-impl) .pf-c-page__main,
 :host(ak-library-impl) .pf-c-page__main-section,
 :host(ak-library-impl) .pf-c-drawer__content,
 :host(ak-library-impl) .pf-c-drawer__main,
 :host(ak-interface-user) .pf-c-page,
-:host(ak-interface-user) .pf-c-page__main {
+:host(ak-interface-user) .pf-c-page__main,
+:host(ak-interface-user) .pf-c-page__drawer,
+:host(ak-interface-user) .pf-c-drawer,
+:host(ak-interface-user) .pf-c-drawer__main,
+:host(ak-interface-user) .pf-c-drawer__content,
+:host(ak-interface-user) .pf-c-drawer__body,
+:host(ak-interface-user) .pf-c-page__main-section,
+:host(ak-interface-user) .pf-l-stack,
+:host(ak-interface-user) .pf-l-stack__item,
+:host(ak-interface-user-presentation) .pf-c-page,
+:host(ak-interface-user-presentation) .pf-c-page__main {
     background: transparent !important;
     background-color: transparent !important;
+}
+
+/* === CSS SHADOW PARTS (light DOM → shadow DOM via ::part()) ===
+   Authentik 2026.x doesn't propagate the Brand Custom CSS into the shadow root
+   of <ak-interface-user> the way it does for flow components, so :host(...)
+   rules above never reach .pf-c-page inside the user dashboard. The exposed
+   `part="..."` attributes let us style those elements from the light DOM. */
+
+ak-interface-user::part(page),
+ak-interface-user::part(page__header),
+ak-interface-user-presentation::part(page),
+ak-interface-user-presentation::part(page__header) {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* Hide the 2026.x decorative slant — it draws a partial-width image that
+   conflicts with our full-viewport background and creates "image with black
+   bands on the sides" effect. */
+ak-interface-user::part(background-wrapper),
+ak-interface-user::part(background-default-slant),
+ak-interface-user-presentation::part(background-wrapper),
+ak-interface-user-presentation::part(background-default-slant) {
+    display: none !important;
+}
+
+/* === LOGIN FLOW GLASSMORPHISM — multi-strategy ===
+   Authentik 2026.x injects the Brand Custom CSS *inside* the shadow root of
+   <ak-flow-executor> rather than at the document level. That means:
+   - `ak-flow-executor::part(main)` (document level) DOES NOT MATCH because the
+     stylesheet lives inside the shadow root where `ak-flow-executor` is the
+     :host, not a descendant.
+   - `:host(ak-flow-executor) .pf-c-login__main` matches inside the shadow root.
+   We write both so it works whichever way the CSS is injected. */
+
+/* Inherited CSS variables (work through shadow boundaries if not redefined) */
+:root,
+html,
+body {
+    --pf-c-login__main--BackgroundColor: transparent;
+    --pf-c-login__main--BoxShadow: none;
+    --pf-c-login__main--Color: white;
+}
+
+/* (a) Match if CSS is injected at document level — CONFIRMED working by user test:
+   `getComputedStyle(...shadowRoot.querySelector('main[part="main"]')).background`
+   returns our rgba value. ::part() at document level is the ONLY reliable route. */
+ak-flow-executor::part(main) {
+    /* Strong glass — 0.05 was invisible. Use darker tint with high blur. */
+    background: rgba(15, 20, 35, 0.55) !important;
+    background-color: rgba(15, 20, 35, 0.55) !important;
+    backdrop-filter: blur(40px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(40px) saturate(160%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    padding: 32px 28px !important;
+    width: 90% !important;
+    /* Wider so long button labels like "Sélectionnez une autre méthode
+       d'authentification" fit without forcing horizontal overflow. */
+    max-width: 600px !important;
+    min-width: 0 !important;
+    /* Center on viewport via position:fixed + translate. */
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
+    max-height: 90vh !important;
+    /* `overflow-x: clip` absolutely forbids horizontal scrollbar. */
+    overflow-x: clip !important;
+    overflow-y: auto !important;
+    overflow-clip-margin: 0 !important;
+    z-index: 10 !important;
+    /* Keep labels left-aligned (UX standard). Centering specific elements
+       (buttons, empty-state, brand logo) is done below via CSS variables
+       and per-element rules — NOT a blanket text-align: center on the main. */
+    box-sizing: border-box !important;
+}
+
+ak-flow-executor::part(footer) {
+    background: transparent !important;
+}
+
+/* Center the Palo Alto brand logo inside the main box (was left-aligned by
+   default Authentik style). The <div part="branding"> is exposed directly
+   as a sub-part of the flow executor's shadow root. */
+ak-flow-executor::part(branding) {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin-bottom: 16px !important;
+}
+
+/* (b) Match if CSS is injected INSIDE the shadow root of ak-flow-executor.
+   Inside the shadow root, the host element is matched by :host (or :host(...)).
+   The <main class="pf-c-login__main" part="main"> is a descendant of :host. */
+:host(ak-flow-executor) .pf-c-login__main,
+:host(.pf-c-login) .pf-c-login__main,
+:host(ak-flow-executor) main[part="main"],
+:host(.pf-c-login) main[part="main"] {
+    background: rgba(255, 255, 255, 0.05) !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(30px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(140%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+    padding: 32px 28px !important;
+    max-width: 480px !important;
+    margin: 0 auto !important;
+}
+
+/* (c) Center the shadow content vertically to reduce excessive scroll.
+   This rule, when injected into the shadow root, makes the shadow root host
+   layout its children with flex-column centered. */
+:host(ak-flow-executor),
+:host(.pf-c-login) {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 100vh !important;
+    width: 100% !important;
+    padding: 20px 0 !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+}
+
+/* === <ak-flow-card> transparency (host of every login stage in 2026.x) === */
+ak-flow-card,
+:host(ak-flow-card) {
+    background: transparent !important;
+    background-color: transparent !important;
+    display: block !important;
+}
+
+:host(ak-flow-card) .pf-c-login__main-header,
+:host(ak-flow-card) .pf-c-login__main-body {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* === <ak-locale-select> — position absolute top-left + fix label/select overlap ===
+   Like above, multi-strategy: ::part() at document level AND descendant selectors
+   inside the shadow root via :host(). */
+
+/* === Locale select — CENTERED HORIZONTALLY ON ALL VIEWPORTS ===
+   Uses `left: 50vw` (viewport units) instead of `left: 50%`, so it stays
+   centered on the viewport regardless of which ancestor's containing block
+   gets used. `transform: translateX(-50%)` then shifts it left by half its
+   own width to truly center it.
+
+   Always at top: 14px from viewport top. Same behavior desktop + mobile so
+   it never goes off-screen or overlaps the login box. */
+ak-locale-select,
+ak-flow-executor::part(locale-select) {
+    position: absolute !important;
+    top: 14px !important;
+    left: 50vw !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: translateX(-50%) !important;
+    z-index: 1000 !important;
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: auto !important;
+    max-width: 280px !important;
+    min-width: 180px !important;
+    padding: 5px 12px !important;
+    background-color: rgba(20, 20, 30, 0.7) !important;
+    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 10px !important;
+}
+
+/* (b) Inside shadow root of ak-flow-executor */
+:host(ak-flow-executor) ak-locale-select,
+:host(.pf-c-login) ak-locale-select {
+    position: absolute !important;
+    top: 14px !important;
+    left: 14px !important;
+    z-index: 100 !important;
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: auto !important;
+    max-width: 200px !important;
+}
+
+ak-flow-executor::part(locale-select-label) {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    width: 18px !important;
+    height: 18px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    fill: rgba(255, 255, 255, 0.7) !important;
+}
+
+ak-flow-executor::part(locale-select-select) {
+    flex: 0 1 auto !important;
+    width: auto !important;
+    max-width: 200px !important;
+    min-width: 130px !important;
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    color: white !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 6px !important;
+    padding: 2px 8px !important;
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+    height: auto !important;
+}
+
+/* Fallback for the case where Authentik DOES inject CSS into ak-locale-select's
+   shadow root. Use 50vw centering (same as document-level rule above) to keep
+   behavior consistent if both rules end up applying. */
+:host(ak-locale-select) {
+    position: absolute !important;
+    top: 14px !important;
+    left: 50vw !important;
+    transform: translateX(-50%) !important;
+    z-index: 1000 !important;
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: auto !important;
+    max-width: 280px !important;
+    min-width: 180px !important;
+}
+
+:host(ak-locale-select) label {
+    display: inline-flex !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+    width: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+:host(ak-locale-select) svg.icon {
+    width: 16px !important;
+    height: 16px !important;
+    fill: rgba(255, 255, 255, 0.7) !important;
+}
+
+:host(ak-locale-select) select {
+    width: auto !important;
+    max-width: 140px !important;
+    min-width: 80px !important;
 }
 
 
@@ -1366,10 +1663,10 @@ ak-loading-overlay {
 
 /* ===== ADMIN BUTTON STYLING ===== */
 
+/* Admin button is slotted via <slot name="extra"> in <ak-nav-buttons>, so it lives
+   in the light DOM of <ak-interface-user> directly — NOT inside .pf-c-page__header-tools-item. */
 :host(ak-interface-user) a[href*="/if/admin/"],
-:host(ak-interface-user-presentation) a[href*="/if/admin/"],
-:host(ak-interface-user) .pf-c-page__header-tools-item a.pf-c-button.pf-m-secondary,
-:host(ak-interface-user-presentation) .pf-c-page__header-tools-item a.pf-c-button.pf-m-secondary {
+:host(ak-interface-user-presentation) a[href*="/if/admin/"] {
     border-radius: 50px !important;
     border: none !important;
     background: rgba(255, 255, 255, 0.15) !important;
@@ -1406,9 +1703,7 @@ ak-loading-overlay {
 }
 
 :host(ak-interface-user) a[href*="/if/admin/"]:hover,
-:host(ak-interface-user-presentation) a[href*="/if/admin/"]:hover,
-:host(ak-interface-user) .pf-c-page__header-tools-item a.pf-c-button.pf-m-secondary:hover,
-:host(ak-interface-user-presentation) .pf-c-page__header-tools-item a.pf-c-button.pf-m-secondary:hover {
+:host(ak-interface-user-presentation) a[href*="/if/admin/"]:hover {
     background: rgba(255, 255, 255, 0.25) !important;
     transform: translateY(-2px) !important;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
@@ -1417,18 +1712,14 @@ ak-loading-overlay {
 }
 
 :host(ak-interface-user) a[href*="/if/admin/"]::after,
-:host(ak-interface-user-presentation) a[href*="/if/admin/"]::after,
-:host(ak-interface-user) .pf-c-page__header-tools-item a.pf-c-button.pf-m-secondary::after,
-:host(ak-interface-user-presentation) .pf-c-page__header-tools-item a.pf-c-button.pf-m-secondary::after {
+:host(ak-interface-user-presentation) a[href*="/if/admin/"]::after {
     border: none !important;
     display: none !important;
     content: none !important;
 }
 
 :host(ak-interface-user) a[href*="/if/admin/"]:focus,
-:host(ak-interface-user-presentation) a[href*="/if/admin/"]:focus,
-:host(ak-interface-user) .pf-c-page__header-tools-item a.pf-c-button.pf-m-secondary:focus,
-:host(ak-interface-user-presentation) .pf-c-page__header-tools-item a.pf-c-button.pf-m-secondary:focus {
+:host(ak-interface-user-presentation) a[href*="/if/admin/"]:focus {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
 }
 
@@ -1462,7 +1753,6 @@ ak-loading-overlay {
 
 :host(ak-library-impl) .pf-c-card__title,
 :host(ak-library-impl) .pf-c-card__body {
-    color: white !important;
     color: white !important;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
 }
@@ -1795,15 +2085,6 @@ ak-app-icon::part(icon image) {
 
 
 
-.pf-c-login__main-footer-links {
-    margin-top: 0 !important;
-    position: relative !important;
-    display: flex !important;
-    justify-content: center !important;
-    /* Ensure separator is full width on top */
-    flex-wrap: wrap !important;
-}
-
 /* Custom CSS-only Separator "Ou" */
 .pf-c-login__main-footer-links::before {
     content: var(--ak-social-separator-text) !important;
@@ -1847,34 +2128,7 @@ ak-app-icon::part(icon image) {
 /* Resize the icon (FontAwesome or SVG) */
 .pf-c-login__main-footer-links-item-link i,
 .pf-c-login__main-footer-links-item-link svg {
-    /* Revert to slightly larger icon since text is gone */
-    font-size: 24px !important;
-    width: 24px !important;
-    height: 24px !important;
-    text-align: center !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-
-/* If no match found, fallback to aria-label or just blank */
-content: attr(aria-label);
-font-size: 14px !important;
-font-weight: 500 !important;
-color: rgba(255, 255, 255, 0.9) !important;
-white-space: nowrap !important;
-display: block !important;
-text-transform: capitalize !important;
-}
-
-/* Ensure nice casing */
-}
-
-/* Resize the icon (FontAwesome or SVG) */
-.pf-c-login__main-footer-links-item-link i,
-.pf-c-login__main-footer-links-item-link svg {
     font-size: 18px !important;
-    /* Reduce specific icon size */
     width: 18px !important;
     height: 18px !important;
     text-align: center !important;
@@ -1977,22 +2231,680 @@ text-transform: capitalize !important;
     cursor: pointer;
 }
 
-/* Separator "ou" above buttons */
-.pf-c-login__main-footer-links::before {
-    content: "────────  ou  ────────";
-    display: block;
-    width: 100%;
-    color: #b8bbc2;
-    text-align: center;
-    font-size: 14px;
-    font-weight: 500;
-    margin: 10px 0 15px 0;
-    letter-spacing: 0.4px;
-    opacity: 0.8;
+/* ========================================= */
+/* ===== AUTHENTIK 2026.x COMPATIBILITY ==== */
+/* ========================================= */
+/* New web components and class variants introduced between 2025.10.x and 2026.2.x. */
+
+/* --- pf-m-block: block-level variant on primary/secondary buttons (login & MFA) --- */
+:host(ak-stage-identification) .pf-c-button.pf-m-primary.pf-m-block,
+:host(ak-stage-password) .pf-c-button.pf-m-primary.pf-m-block,
+:host(ak-stage-authenticator-validate) .pf-c-button.pf-m-primary.pf-m-block,
+:host(ak-stage-authenticator-validate-code) .pf-c-button.pf-m-primary.pf-m-block,
+:host(ak-stage-authenticator-validate-duo) .pf-c-button.pf-m-primary.pf-m-block,
+:host(ak-stage-authenticator-validate-webauthn) .pf-c-button.pf-m-primary.pf-m-block,
+:host(ak-stage-consent) .pf-c-button.pf-m-primary.pf-m-block {
+    width: 100% !important;
+    display: block !important;
+    text-align: center !important;
+}
+
+:host(ak-stage-authenticator-validate) .pf-c-button.pf-m-secondary.pf-m-block,
+:host(ak-stage-authenticator-validate-code) .pf-c-button.pf-m-secondary.pf-m-block,
+:host(ak-stage-authenticator-validate-webauthn) .pf-c-button.pf-m-secondary.pf-m-block {
+    width: 100% !important;
+    display: block !important;
+}
+
+/* --- <ak-flow-card>: new Shadow DOM wrapper around each stage (2026.x) --- */
+:host(ak-flow-card) {
+    display: block !important;
+}
+
+:host(ak-flow-card) .pf-c-title,
+:host(ak-flow-card) h1,
+:host(ak-flow-card) label,
+:host(ak-flow-card) p,
+:host(ak-flow-card) .pf-c-form__label,
+:host(ak-flow-card) .pf-c-form__label-text {
+    color: white !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+}
+
+:host(ak-flow-card) .pf-c-form__helper-text {
+    color: rgba(255, 255, 255, 0.7) !important;
+    font-size: 13px !important;
+    margin-top: 6px !important;
+}
+
+/* --- <ak-form-static>: avatar + username block on password/MFA stages --- */
+:host(ak-form-static) {
+    display: block !important;
+    margin-bottom: 16px !important;
+}
+
+:host(ak-form-static) .primary-content,
+:host(ak-form-static) .username,
+:host(ak-form-static) .links a {
+    color: white !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+}
+
+:host(ak-form-static) .pf-c-avatar {
+    border: 2px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 50% !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+:host(ak-form-static) .links a {
+    opacity: 0.85;
+    transition: opacity 0.2s ease;
+}
+
+:host(ak-form-static) .links a:hover {
+    opacity: 1;
+    text-decoration: underline !important;
+}
+
+/* --- <ak-flow-input-password>: 2026.x replacement for .pf-c-input-group password wrapper --- */
+:host(ak-flow-input-password) {
+    display: block !important;
+    width: 100% !important;
+}
+
+:host(ak-flow-input-password) .pf-c-form-control.pf-m-icon,
+:host(ak-flow-input-password) input[type="password"] {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 14px !important;
+    padding: 10px 15px !important;
+    color: white !important;
+    backdrop-filter: blur(20px) saturate(130%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(130%) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+:host(ak-flow-input-password) .pf-c-form-control:focus {
+    border-color: rgba(102, 126, 234, 0.5) !important;
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* --- <ak-locale-select>: language picker at top of flow card --- */
+:host(ak-locale-select) {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+:host(ak-locale-select) select,
+:host(ak-locale-select) [part="select"] {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    color: white !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 8px !important;
+    padding: 4px 8px !important;
+    font-size: 13px !important;
+}
+
+:host(ak-locale-select) select option {
+    background-color: #1f1f1f !important;
+    color: white !important;
+}
+
+:host(ak-locale-select) svg.icon {
+    fill: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* --- <ak-tabs>: new container hosting .pf-c-tabs (vertical for user settings) --- */
+:host(ak-tabs) .pf-c-tabs.pf-m-vertical {
+    background: transparent !important;
+}
+
+:host(ak-tabs) .pf-c-tabs__list {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+:host(ak-tabs) .pf-c-tabs__link,
+:host(ak-tabs) .pf-c-tabs__button {
+    color: rgba(255, 255, 255, 0.7) !important;
+    background: transparent !important;
+    transition: all 0.2s ease !important;
+}
+
+:host(ak-tabs) .pf-c-tabs__link:hover,
+:host(ak-tabs) .pf-c-tabs__button:hover {
+    color: white !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+:host(ak-tabs) .pf-c-tabs__item.pf-m-current .pf-c-tabs__link,
+:host(ak-tabs) .pf-c-tabs__item.pf-m-current .pf-c-tabs__button {
+    color: white !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+:host(ak-tabs) .pf-c-tabs__item.pf-m-current::after {
+    border-color: #667eea !important;
+}
+
+/* --- <ak-empty-state> + <ak-spinner>: loading states inside tables --- */
+:host(ak-empty-state) .pf-c-empty-state,
+:host(ak-empty-state) .pf-c-empty-state__content,
+:host(ak-empty-state) .pf-c-empty-state__body {
+    background: transparent !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+:host(ak-empty-state) .pf-c-title,
+:host(ak-empty-state) h1 {
+    color: white !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+}
+
+:host(ak-empty-state) .pf-c-empty-state__icon,
+:host(ak-empty-state) i.pf-icon {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+:host(ak-spinner) .pf-c-spinner,
+:host(ak-spinner) .pf-c-spinner__clipper,
+:host(ak-spinner) .pf-c-spinner__lead-ball,
+:host(ak-spinner) .pf-c-spinner__tail-ball {
+    --pf-c-spinner--Color: rgba(255, 255, 255, 0.85) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* --- <pf-tooltip>: PatternFly v5 tooltips on header icons --- */
+pf-tooltip {
+    --pf-tooltip--Color: white;
+    --pf-tooltip--BackgroundColor: rgba(20, 20, 30, 0.95);
+}
+
+/* --- <ak-spinner-button>: also matches the "Refresh" button in user-settings toolbars --- */
+:host(ak-spinner-button) button.pf-c-button.pf-m-progress.pf-m-secondary {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    border-radius: 8px !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+:host(ak-spinner-button) button.pf-c-button:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* --- Dashboard parts: app-group / card-wrapper (2026.x ak-library-impl structure) --- */
+:host(ak-library-impl) fieldset[part="app-group"] {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin-bottom: 24px !important;
+}
+
+:host(ak-library-impl) legend[part="app-group-header"] {
+    color: white !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    margin-bottom: 12px !important;
+    padding-bottom: 8px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+:host(ak-library-impl) hr[part="app-group-separator"] {
+    display: none !important;
+}
+
+:host(ak-library-impl) [part="card-wrapper"] {
+    background: transparent !important;
+}
+
+/* Card dropdown menu (HTML5 popover) shown via the ⋮ button on each app card.
+   Reach it from document level via ::part(), since :host(...) doesn't apply. */
+ak-library-impl::part(card-header-actions-menu) {
+    background: rgba(20, 20, 30, 0.95) !important;
+    background-color: rgba(20, 20, 30, 0.95) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: blur(20px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
+    padding: 6px !important;
+    color: white !important;
+}
+
+ak-library-impl::part(card-header-action) {
+    color: rgba(255, 255, 255, 0.9) !important;
+    background: transparent !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+    transition: background 0.2s ease !important;
+}
+
+ak-library-impl::part(card-header-action):hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+}
+
+ak-library-impl::part(card-header-action-publisher) {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+ak-library-impl::part(card-header-action-description) {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-size: 13px !important;
+}
+
+ak-library-impl::part(card-header-actions-button) {
+    color: rgba(255, 255, 255, 0.7) !important;
+    background: transparent !important;
+    border: none !important;
+    transition: color 0.2s ease !important;
+}
+
+ak-library-impl::part(card-header-actions-button):hover {
+    color: white !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 8px !important;
+}
+
+/* ========================================= */
+/* === PATTERNFLY CSS VARS (shadow-piercing) === */
+/* ========================================= */
+/* CSS custom properties inherit through shadow boundaries unless redefined
+   inside. Authentik's components style their inner elements via these PF
+   variables, so setting them at :root reaches deeply nested inputs/tables
+   that ::part() can't address (no `part` attributes on those elements). */
+
+:root,
+html,
+body {
+    /* Form controls (inputs, selects, textareas) */
+    --pf-c-form-control--BackgroundColor: rgba(255, 255, 255, 0.08);
+    --pf-c-form-control--Color: white;
+    --pf-c-form-control--BorderColor: rgba(255, 255, 255, 0.2);
+    --pf-c-form-control--BorderTopColor: rgba(255, 255, 255, 0.2);
+    --pf-c-form-control--BorderRightColor: rgba(255, 255, 255, 0.2);
+    --pf-c-form-control--BorderLeftColor: rgba(255, 255, 255, 0.2);
+    --pf-c-form-control--BorderBottomColor: rgba(255, 255, 255, 0.4);
+    --pf-c-form-control--PlaceholderColor: rgba(255, 255, 255, 0.5);
+    --pf-c-form-control--hover--BorderBottomColor: rgba(102, 126, 234, 0.6);
+    --pf-c-form-control--focus--BorderBottomColor: rgba(102, 126, 234, 0.8);
+    --pf-c-form-control--BorderRadius: 14px;
+
+    /* Form labels */
+    --pf-c-form__label--Color: white;
+    --pf-c-form__label-text--Color: white;
+    --pf-c-form__label-required--Color: #ff6b6b;
+
+    /* Tables (user-settings list views) */
+    --pf-c-table--BackgroundColor: transparent;
+    --pf-c-table--cell--BackgroundColor: transparent;
+    --pf-c-table--cell--Color: rgba(255, 255, 255, 0.9);
+    --pf-c-table--BorderColor: rgba(255, 255, 255, 0.1);
+    --pf-c-table--cell--BorderBottomColor: rgba(255, 255, 255, 0.1);
+    --pf-c-table--m-grid-md__tr--BorderColor: rgba(255, 255, 255, 0.08);
+    --pf-c-table__sort__button--Color: rgba(255, 255, 255, 0.85);
+    --pf-c-table__sort__button--hover--Color: white;
+    --pf-c-table__sort--m-selected__button--Color: white;
+    --pf-c-table-thead--cell--Color: white;
+    --pf-c-table-thead--cell--FontSize: 13px;
+
+    /* Tooltips (pf-tooltip web component) */
+    --pf-c-tooltip--BackgroundColor: rgba(20, 20, 30, 0.95);
+    --pf-c-tooltip__content--Color: white;
+    --pf-c-tooltip__content--BackgroundColor: rgba(20, 20, 30, 0.95);
+    --pf-c-tooltip--MaxWidth: 250px;
+    --pf-c-tooltip__content--PaddingTop: 6px;
+    --pf-c-tooltip__content--PaddingBottom: 6px;
+    --pf-c-tooltip__content--PaddingLeft: 10px;
+    --pf-c-tooltip__content--PaddingRight: 10px;
+    --pf-c-tooltip__content--BorderRadius: 8px;
+    --pf-c-tooltip__content--FontSize: 13px;
+
+    /* PatternFly v5 tooltip variants (newer Authentik) */
+    --pf-v5-c-tooltip--BackgroundColor: rgba(20, 20, 30, 0.95);
+    --pf-v5-c-tooltip__content--Color: white;
+    --pf-v5-c-tooltip__content--BackgroundColor: rgba(20, 20, 30, 0.95);
+
+    /* Pagination + toolbar in shadow user-settings tables */
+    --pf-c-toolbar--BackgroundColor: transparent;
+    --pf-c-pagination--BackgroundColor: transparent;
+    --pf-c-pagination__nav-control__button--Color: white;
+
+    /* Cards in user settings */
+    --pf-c-card--BackgroundColor: rgba(255, 255, 255, 0.05);
+    --pf-c-card__title--Color: white;
+    --pf-c-card__body--Color: rgba(255, 255, 255, 0.9);
+
+    /* Buttons — wrap long labels and keep them centered in their parent.
+       The "Sélectionnez une autre méthode d'authentification" button is the
+       main culprit for overflow. */
+    --pf-c-button--LineHeight: 1.4;
+    --pf-c-button--FontSize: 14px;
+    --pf-c-button--PaddingTop: 10px;
+    --pf-c-button--PaddingBottom: 10px;
+    --pf-c-button--PaddingLeft: 14px;
+    --pf-c-button--PaddingRight: 14px;
+    --pf-c-button--m-block--width: 100%;
+    --pf-c-button--m-block--MaxWidth: 100%;
+
+    /* Empty state (e.g. "Authentification en cours...") — center its content. */
+    --pf-c-empty-state__content--TextAlign: center;
+    --pf-c-empty-state--TextAlign: center;
+    --pf-c-empty-state--JustifyContent: center;
+    --pf-c-empty-state--AlignItems: center;
+    --pf-c-empty-state--PaddingTop: 16px;
+    --pf-c-empty-state--PaddingBottom: 16px;
+}
+
+/* In case Authentik DOES inject the Custom CSS into stage shadow roots, these
+   :host() rules help center the empty state container (the spinner +
+   "Authentification en cours..." message) inside the WebAuthn validate stage. */
+:host(ak-stage-authenticator-validate-webauthn) ak-empty-state,
+:host(ak-stage-authenticator-validate-code) ak-empty-state {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    width: 100% !important;
+    margin: 16px auto !important;
+}
+
+:host(ak-stage-authenticator-validate-webauthn) .pf-c-empty-state,
+:host(ak-stage-authenticator-validate-webauthn) .pf-c-empty-state__content,
+:host(ak-stage-authenticator-validate-code) .pf-c-empty-state,
+:host(ak-stage-authenticator-validate-code) .pf-c-empty-state__content {
+    text-align: center !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin: 0 auto !important;
+}
+
+/* Force buttons to wrap their long text rather than overflowing. */
+:host(ak-stage-authenticator-validate-webauthn) button.pf-c-button.pf-m-block,
+:host(ak-stage-authenticator-validate-code) button.pf-c-button.pf-m-block,
+:host(ak-stage-password) button.pf-c-button.pf-m-block,
+:host(ak-stage-identification) button.pf-c-button.pf-m-block {
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    line-height: 1.4 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+}
+
+/* === Tables — make the shadow-DOM tables horizontally scrollable on small
+   screens so columns don't overflow/overlap === */
+ak-user-session-list::part(table-container),
+ak-user-consent-list::part(table-container),
+ak-user-settings-mfa::part(table-container),
+ak-user-token-list::part(table-container),
+ak-user-reputation-list::part(table-container) {
+    overflow-x: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+ak-user-session-list::part(toolbar),
+ak-user-consent-list::part(toolbar),
+ak-user-settings-mfa::part(toolbar),
+ak-user-token-list::part(toolbar) {
+    background: transparent !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+}
+
+/* === pf-tooltip element styling (light DOM tag, so reachable from doc level) */
+pf-tooltip {
+    --pf-c-tooltip--BackgroundColor: rgba(20, 20, 30, 0.95);
+    --pf-c-tooltip__content--Color: white;
+    --pf-v5-c-tooltip--BackgroundColor: rgba(20, 20, 30, 0.95);
+    --pf-v5-c-tooltip__content--Color: white;
+    color: white;
+}
+
+/* ========================================= */
+/* === STATIC ERROR PAGES (no shadow DOM) === */
+/* ========================================= */
+/* Authentik's error pages (e.g. "Client ID Error", "Permission Denied", flow
+   not found, etc.) are rendered as static HTML in the light DOM — no
+   <ak-flow-executor>, no Shadow Parts. Our ::part() and :host() rules don't
+   apply here. We need plain selectors targeting the static structure. */
+
+/* Cap branding logo size everywhere — was unset, so static pages rendered the
+   native PNG size (huge). Also applies inside flows for consistency. */
+.branding-logo,
+img.branding-logo,
+.pf-c-brand img,
+.pf-c-login__main-header.pf-c-brand img {
+    max-width: 140px !important;
+    max-height: 70px !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+    margin: 0 auto !important;
+    display: block !important;
+}
+
+/* Center the .pf-c-login box on static pages (no ak-flow-executor wrapper).
+   We use :not(:has(ak-flow-executor)) to scope to error pages only. */
+body:not(:has(ak-flow-executor)) .pf-c-page__drawer,
+body:not(:has(ak-flow-executor)) .pf-c-drawer,
+body:not(:has(ak-flow-executor)) .pf-c-drawer__main,
+body:not(:has(ak-flow-executor)) .pf-c-drawer__content,
+body:not(:has(ak-flow-executor)) .pf-c-drawer__body {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 100vh !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
+    padding: 20px !important;
+    overflow: hidden !important;
+}
+
+body:not(:has(ak-flow-executor)) .pf-c-login {
+    width: 90% !important;
+    max-width: 480px !important;
+    margin: 0 auto !important;
+    background: transparent !important;
+}
+
+body:not(:has(ak-flow-executor)) .pf-c-login__main {
+    background: rgba(15, 20, 35, 0.55) !important;
+    backdrop-filter: blur(40px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(40px) saturate(160%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    padding: 36px 32px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    color: white !important;
+}
+
+body:not(:has(ak-flow-executor)) .pf-c-login__main-header {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-bottom: 20px !important;
+}
+
+body:not(:has(ak-flow-executor)) .pf-c-login__main-header.pf-c-brand {
+    margin-bottom: 16px !important;
+}
+
+body:not(:has(ak-flow-executor)) .pf-c-title {
+    color: white !important;
+    text-align: center !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+    margin-bottom: 16px !important;
+    font-size: 24px !important;
+    font-weight: 600 !important;
+}
+
+body:not(:has(ak-flow-executor)) .pf-c-login__main-body {
+    color: white !important;
+    text-align: center !important;
+}
+
+body:not(:has(ak-flow-executor)) .pf-c-login__main-body p {
+    color: rgba(255, 255, 255, 0.85) !important;
+    margin-bottom: 20px !important;
+    line-height: 1.5 !important;
+    text-align: center !important;
+}
+
+/* Buttons on static error pages — apply the same glass styling we use for
+   login flow buttons, but via plain class selectors (no :host()). */
+body:not(:has(ak-flow-executor)) .pf-c-login .pf-c-button.pf-m-primary,
+body:not(:has(ak-flow-executor)) .pf-c-button.pf-m-primary.pf-m-block,
+body:not(:has(ak-flow-executor)) a.pf-c-button.pf-m-primary {
+    background: rgba(255, 255, 255, 0.15) !important;
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: white !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 14px !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    padding: 12px 24px !important;
+    font-weight: 600 !important;
+    font-size: 15px !important;
+    text-transform: none !important;
+    text-decoration: none !important;
+    transition: all 0.3s ease !important;
+    display: inline-block !important;
+    text-align: center !important;
+}
+
+body:not(:has(ak-flow-executor)) .pf-c-login .pf-c-button.pf-m-primary:hover,
+body:not(:has(ak-flow-executor)) .pf-c-button.pf-m-primary.pf-m-block:hover,
+body:not(:has(ak-flow-executor)) a.pf-c-button.pf-m-primary:hover {
+    background: rgba(255, 255, 255, 0.25) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+    color: white !important;
+    text-decoration: none !important;
+}
+
+body:not(:has(ak-flow-executor)) .pf-c-form__group {
+    text-align: center !important;
+    margin-top: 8px !important;
+}
+
+/* Footer on static pages */
+body:not(:has(ak-flow-executor)) .pf-c-login__footer {
+    background: transparent !important;
+    text-align: center !important;
+    margin-top: 20px !important;
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+body:not(:has(ak-flow-executor)) .pf-c-login__footer .pf-c-list {
+    display: none !important;
 }
 
 /* ===== RESPONSIVE MOBILE ===== */
 @media (max-width: 768px) {
+
+    /* Mobile: glassmorphism on the shadow-DOM <main> via shadow part.
+       Also prevent horizontal overflow caused by long button labels like
+       "Sélectionnez une autre méthode d'authentification". */
+    ak-flow-executor::part(main) {
+        background: rgba(20, 20, 30, 0.45) !important;
+        backdrop-filter: blur(18px) saturate(140%) !important;
+        -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
+        border-radius: 20px !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        padding: 28px 20px !important;
+        box-sizing: border-box !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+        width: calc(100vw - 24px) !important;
+        max-width: calc(100vw - 24px) !important;
+        overflow-x: hidden !important;
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+    }
+
+    /* Mobile: same horizontal centering as desktop (left: 50vw + translateX(-50%))
+       — only adjust the top offset and sizes. */
+    ak-locale-select,
+    ak-flow-executor::part(locale-select) {
+        top: 10px !important;
+        left: 50vw !important;
+        right: auto !important;
+        transform: translateX(-50%) !important;
+        max-width: 240px !important;
+        min-width: 180px !important;
+        padding: 5px 12px !important;
+    }
+
+    ak-flow-executor::part(locale-select-select) {
+        max-width: 180px !important;
+        min-width: 130px !important;
+        font-size: 14px !important;
+    }
+
+    ak-flow-executor::part(locale-select-label) {
+        width: 18px !important;
+        height: 18px !important;
+    }
+
+    /* Allow buttons to wrap their text (the "Sélectionnez une autre méthode
+       d'authentification" button is what creates the horizontal scroll). */
+    .pf-c-button.pf-m-block {
+        white-space: normal !important;
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+        line-height: 1.3 !important;
+        text-align: center !important;
+        min-height: 40px !important;
+        height: auto !important;
+        padding: 10px 14px !important;
+    }
+
+    /* Globally prevent horizontal overflow on the body */
+    html,
+    body {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
+    }
+
+    /* Mobile: shrink fonts and paddings in user-settings tables so columns
+       don't overflow/overlap. Tables can horizontally scroll thanks to the
+       ::part(table-container) overflow-x rule above. */
+    :root,
+    html,
+    body {
+        --pf-c-table--cell--FontSize: 12px;
+        --pf-c-table--cell--PaddingTop: 8px;
+        --pf-c-table--cell--PaddingBottom: 8px;
+        --pf-c-table--cell--PaddingLeft: 8px;
+        --pf-c-table--cell--PaddingRight: 8px;
+        --pf-c-table-thead--cell--FontSize: 12px;
+        --pf-c-form-control--FontSize: 14px;
+    }
+
+    /* Mobile cards in user-settings: full-width with margin */
+    :host(ak-user-settings) .pf-c-card,
+    ak-user-settings .pf-c-card {
+        margin: 8px 4px !important;
+        padding: 12px !important;
+    }
+
+    /* Hide pf-tooltip on mobile — they're flaky and the icons are self-explanatory */
+    pf-tooltip {
+        --pf-c-tooltip--MaxWidth: 200px;
+        font-size: 12px;
+    }
 
     /* Force le background de la page sur mobile */
     .pf-c-page,
@@ -2187,14 +3099,6 @@ text-transform: capitalize !important;
     ak-loading-overlay {
         border-radius: 0 !important;
     }
-
-    /* ========================================= */
-    /* === FIX DASHBOARD MOBILE (Background) === */
-    /* ========================================= */
-
-    /* ========================================= */
-    /* === FIX DASHBOARD MOBILE (Background) === */
-    /* ========================================= */
 
     /* ========================================= */
     /* === FIX DASHBOARD MOBILE (Background) === */
