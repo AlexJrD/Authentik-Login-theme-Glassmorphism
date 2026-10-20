@@ -1,8 +1,8 @@
-/* ===== AUTHENTIK GLASSMORPHISM THEME - V4.0 (Authentik 2026.8.x) ===== */
+/* ===== AUTHENTIK GLASSMORPHISM THEME - V4.0.1 (Authentik 2026.8.x) ===== */
 
 /*
    Glassmorphism theme for Authentik.
-   Tested against the Authentik 2026.8.4 frontend sources.
+   Tested on Authentik 2026.8.4.
    Install: Admin -> System -> Brands -> (your brand) -> Custom CSS.
 
    HOW AUTHENTIK APPLIES THIS FILE (2026.x)
@@ -16,6 +16,10 @@
    This V4 relies on that and NEVER fights Authentik's native CSS grid any more:
    it only re-tunes its CSS variables and paints the glass on top. This is what
    makes the layout behave on desktop, tablet and mobile.
+
+   CAUTION: in the DOCUMENT copy Authentik escapes the characters < > and &,
+   so never use the child combinator in rules that target light-DOM elements
+   (ak-brand-links, body, html, ::part()): they silently stop matching.
 
    Login page DOM (2026.8):
      body > ak-drawer > ak-flow-executor #shadow
@@ -427,7 +431,8 @@ ak-interface-user {
 
 /* Footer links: simple centred, wrapping row (the native 4-column grid
    squeezes a single link onto several lines on phones) */
-:host(ak-brand-links) [part="list"] {
+ak-brand-links [part="list"],
+[name="flow-links"] .pf-c-list {
     display: flex !important;
     flex-wrap: wrap !important;
     justify-content: center !important;
@@ -435,21 +440,25 @@ ak-interface-user {
     max-width: 100% !important;
 }
 
-:host(ak-brand-links) [part="list-item"] {
+ak-brand-links [part="list-item"],
+[name="flow-links"] .pf-c-list li {
     flex: 0 1 auto !important;
     max-width: 100% !important;
 }
 
 /* Hide ONLY "Powered by authentik" (always the last, text-only item).
-   Your own footer links (Brand settings) stay visible. */
-:host(ak-brand-links) [part="list-item"][data-kind="text"][data-track-name="end"],
-[name="flow-links"] .pf-c-list > li:last-child:not(:has(a)) {
+   Your own footer links (Brand settings) stay visible.
+   NB: <ak-brand-links> renders in the light DOM, so this rule is matched by
+   the DOCUMENT copy of the Custom CSS. Authentik escapes < > & in that copy:
+   never use the ">" combinator in document-level rules. */
+ak-brand-links [part="list-item"][data-kind="text"]:last-child,
+[name="flow-links"] li:last-child:not(:has(a)) {
     display: none !important;
 }
 
 /* --- Language picker: glass pill, centred on top, every viewport --- */
-.pf-c-login > [part="locale-select"],
-.pf-c-login > ak-locale-select {
+.pf-c-login [part="locale-select"],
+.pf-c-login ak-locale-select {
     --ak-c-locale-select--Opacity: 1 !important;
     --ak-c-flow-executor__locale-select--Color: var(--glass-text) !important;
     --ak-c-locale-select--label--Color: var(--glass-text) !important;
@@ -566,7 +575,7 @@ ak-interface-user {
         justify-content: center !important;
     }
 
-    .pf-c-login[data-layout^="sidebar"] > [part="locale-select"] {
+    .pf-c-login[data-layout^="sidebar"] [part="locale-select"] {
         grid-area: header !important;
     }
 }
@@ -657,7 +666,11 @@ ak-flow-card .pf-m-error,
 }
 
 ak-flow-card a:not(.pf-c-button),
-:host(ak-form-static) a {
+:host(ak-form-static) a,
+[slot="link"] a,
+:host(ak-stage-authenticator-validate-webauthn) a:not(.pf-c-button),
+:host(ak-stage-authenticator-validate-code) a:not(.pf-c-button),
+:host(ak-stage-authenticator-validate-duo) a:not(.pf-c-button) {
     color: var(--glass-text) !important;
     text-decoration: none !important;
     opacity: 0.85;
@@ -665,7 +678,8 @@ ak-flow-card a:not(.pf-c-button),
 }
 
 ak-flow-card a:not(.pf-c-button):hover,
-:host(ak-form-static) a:hover {
+:host(ak-form-static) a:hover,
+[slot="link"] a:hover {
     opacity: 1;
     text-decoration: underline !important;
     text-shadow: 0 0 8px rgba(255, 255, 255, 0.5) !important;
@@ -1621,11 +1635,11 @@ ak-library-impl::part(card-header-actions-button):hover {
     box-shadow: none !important;
 }
 
-:host(ak-user-session-list) .pf-c-table tbody > tr > *,
-:host(ak-user-settings-mfa) .pf-c-table tbody > tr > *,
-:host(ak-user-consent-list) .pf-c-table tbody > tr > *,
-:host(ak-user-reputation-list) .pf-c-table tbody > tr > *,
-:host(ak-user-token-list) .pf-c-table tbody > tr > * {
+:host(ak-user-session-list) .pf-c-table tbody td,
+:host(ak-user-settings-mfa) .pf-c-table tbody td,
+:host(ak-user-consent-list) .pf-c-table tbody td,
+:host(ak-user-reputation-list) .pf-c-table tbody td,
+:host(ak-user-token-list) .pf-c-table tbody td {
     border-bottom-color: rgba(255, 255, 255, 0.1) !important;
 }
 
@@ -1787,6 +1801,23 @@ ak-interface-admin::part(brand) {
 
     :host(ak-user-settings) .pf-c-card {
         margin: 8px 0 !important;
+    }
+
+    /* Compact "Admin interface" pill: the wide desktop pill pushed the user
+       menu off-screen on phones (horizontal scroll). */
+    :host(ak-interface-user) a[href*="/if/admin/"] {
+        padding: 6px 12px !important;
+        font-size: 12px !important;
+        line-height: 1.2 !important;
+        white-space: nowrap !important;
+    }
+}
+
+@media (max-width: 400px) {
+    :host(ak-interface-user) a[href*="/if/admin/"] {
+        max-width: 110px !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
     }
 }
 

@@ -2,13 +2,13 @@
 
 A custom **glassmorphism** login theme for [Authentik](https://goauthentik.io/).
 
-> ✅ **V4.0** — Rebuilt for **Authentik 2026.8.x** (validated against the 2026.8.4 frontend sources), desktop + tablet + mobile
+> ✅ **V4.0.1** — Rebuilt for **Authentik 2026.8.x**, tested on **Authentik 2026.8.4** — desktop, tablet and mobile
 >
 > Forked from the original [VULGA01/Authentik-Login-theme-Glassmorphism](https://github.com/VULGA01/Authentik-Login-theme-Glassmorphism) (tested on 2025.10.3) and updated for the new Shadow DOM architecture introduced in Authentik 2026.x.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Authentik version](https://img.shields.io/badge/Authentik-2026.8.4-orange)
-![Version](https://img.shields.io/badge/version-V4.0-blue)
+![Version](https://img.shields.io/badge/version-V4.0.1-blue)
 
 ## 📸 Previews
 
@@ -27,6 +27,8 @@ A custom **glassmorphism** login theme for [Authentik](https://goauthentik.io/).
 ![Dashboard Desktop](./screenshots/dashboard-desktop.jpg)
 
 ### 📱 Mobile
+
+> Mobile captures below were taken with V3.1.x; the V4 layout keeps the same look (glass card with side margins, full background).
 
 <table>
   <tr>
@@ -55,17 +57,18 @@ A custom **glassmorphism** login theme for [Authentik](https://goauthentik.io/).
 
 | Authentik version | Status | Notes |
 |---|---|---|
-| **2026.8.x** | ✅ Supported | This fork — V4.0 |
+| **2026.8.4** | ✅ Fully tested | This fork — V4.0.1 |
+| 2026.8.x (other patch) | 🟢 Supported | Same frontend |
 | 2026.5.x | 🟢 Likely OK | Same flow executor grid |
 | 2026.2.x | 🟡 Use V3.1.3 (tag/commit `98e26aa`) | Older executor layout |
 | 2025.10.3 | 🟡 Use V3.0 from [original repo](https://github.com/VULGA01/Authentik-Login-theme-Glassmorphism) | Older DOM structure |
 | ≤ 2025.x earlier | 🟡 Use V3.0 from [original repo](https://github.com/VULGA01/Authentik-Login-theme-Glassmorphism) | Older DOM structure |
 
-## ✨ Features (V4.0)
+## ✨ Features (V4.0.1)
 
 - **Modern glassmorphism design** — `backdrop-filter` blur, semi-transparent glass cards, elegant shadows.
 - **Full responsiveness** — Optimized for desktop, tablet, and mobile (including iOS quirks).
-- **Authentik 2026.x Shadow DOM support** — Targets new components via CSS Shadow Parts:
+- **Authentik 2026.x Shadow DOM support** — Authentik injects the Custom CSS into every web-component shadow root; the theme styles the 2026.x components from the inside (plus a few `::part()` routes):
   - `<ak-flow-card>` — new wrapper around every login stage
   - `<ak-form-static>` — avatar + username block
   - `<ak-flow-input-password>` — new password wrapper
@@ -82,6 +85,7 @@ A custom **glassmorphism** login theme for [Authentik](https://goauthentik.io/).
 - **User settings + dashboard theming** — Tabs, tables, app cards consistent glass styling.
 - **Themed app card actions** — The `⋮` dropdown menu on each app is glass-styled.
 - **Static error pages** — "Client ID Error" and other static error pages also themed.
+- **User menu & header** — glass top bar, compact admin pill on phones, "Sign out" dropdown always above the page content.
 - **Admin panel safe** — no global button/input rules any more; the admin interface is untouched.
 - **Easy customization** — CSS variables at the top of `theme.css` (background, card width/opacity/radius, logo size, colours).
 
@@ -126,17 +130,26 @@ due to cached CSS. 👉 **Purge your Cloudflare cache** to ensure changes take e
 - The `<datalist>` autocomplete dropdown of the app search bar is browser-rendered.
 - `backdrop-filter` is unavailable on some old browsers / Linux GPU setups: the card then
   falls back to a more opaque tint automatically.
+- On very narrow phones (≈320px) the user-interface header can still overflow by a few
+  pixels; Authentik's own header already overflows there without the theme.
+
+### 🛠️ Note for contributors
+
+Authentik escapes `<`, `>` and `&` in the copy of the Custom CSS inserted in the page
+document (the shadow-root copies are untouched). **Never use the `>` child combinator**
+(or `&` nesting) in rules that must match light-DOM elements such as `ak-brand-links`,
+`body`, `html` or `::part()` selectors: they silently stop matching.
 
 ## 📜 Changelog
 
 See [CHANGELOG.md](./CHANGELOG.md) for the full version history.
 
-### Summary of V4.0 vs V3.1.x
+### Summary of V4.0.x vs V3.1.x
 
 - 🔴 **Login layout rebuilt** for 2026.8: no more `position: fixed` card / `overflow: hidden` on `html, body` (card was pushed off-centre and long forms could not scroll on mobile).
 - 🟢 Merged upstream fixes from VULGA01 (2026.2 / 2026.5: logo size, background-wrapper overlay, glass locale picker) and community forks.
 - 🟢 Social buttons re-targeted to the 2026.x `<fieldset name="login-sources">`.
-- 🟢 ~3200 → 1853 lines, every selector checked against the 2026.8.4 sources.
+- 🟢 ~3200 → 1895 lines, every selector checked against the 2026.8.4 sources.
 
 ### Summary of V3.1.x vs V3.0
 

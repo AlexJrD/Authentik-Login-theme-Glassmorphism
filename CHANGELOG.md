@@ -4,6 +4,28 @@ All notable changes to this theme are documented in this file.
 
 Format: [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PATCH).
 
+## [V4.0.1] — 2026-10-20 (fixes after testing on Authentik 2026.8.4)
+
+### Fixed
+
+- **"Powered by authentik" still visible**: Authentik escapes `<`, `>` and `&` in the
+  document copy of the Custom CSS (`_json_script_escapes`), and `<ak-brand-links>`
+  renders in the light DOM, so the selector using the `>` combinator never matched.
+  All `>` combinators removed from the theme; footer rules rewritten for the light DOM.
+- **"Not you?" link blue on the WebAuthn / code / Duo MFA screens**: the link is
+  slotted from nested authenticator stages that don't use `ak-flow-card`; now white.
+- **Horizontal scroll on the user dashboard on phones**: the "Admin interface" pill
+  pushed the user menu off-screen; compact pill below 768px, ellipsis below 400px.
+- User menu ("Sign out") kept above the library search bar (header stacking context).
+
+### Changed
+
+- 10px spacing between field labels and inputs on login / MFA / prompt stages.
+- README: new desktop screenshots (identification, password, WebAuthn, dashboard),
+  compatibility table marked as tested on 2026.8.4, contributor note on escaping.
+
+---
+
 ## [V4.0] — 2026-10-20 (Authentik 2026.8.x, responsive rebuild)
 
 ### Context
