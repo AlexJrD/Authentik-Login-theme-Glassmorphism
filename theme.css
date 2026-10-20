@@ -633,6 +633,15 @@ ak-flow-card .pf-c-form__label-text,
     text-shadow: var(--glass-text-shadow) !important;
 }
 
+/* Breathing room between a field label and its input */
+ak-flow-card label.pf-c-form__label,
+:host(ak-stage-authenticator-validate-code) label.pf-c-form__label,
+:host(ak-flow-input-password) label.pf-c-form__label,
+:host(ak-user-stage-prompt) label.pf-c-form__label {
+    display: inline-block !important;
+    margin-bottom: 10px !important;
+}
+
 ak-flow-card .pf-c-form__helper-text,
 :host(ak-stage-authenticator-validate-code) .pf-c-form__helper-text,
 :host(ak-flow-input-password) .pf-c-form__helper-text {

@@ -37,6 +37,9 @@ not scroll on phones.
   (the old `.pf-c-login__main-footer-links` selectors no longer match anything).
 - "Stay signed in?" Yes / No side by side, stacked on phones.
 - Inputs at 16px (no iOS zoom), 44px min touch targets, autofill kept glassy.
+- 10px spacing between field labels and inputs (identification, password,
+  MFA code, prompt stages).
+- User menu (Sign out) kept above the library search bar (header stacking fix).
 - Only the "Powered by authentik" footer item is hidden; Brand footer links stay.
 
 ### Removed
