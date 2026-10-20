@@ -4,6 +4,65 @@ All notable changes to this theme are documented in this file.
 
 Format: [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PATCH).
 
+## [V4.0] — 2026-10-20 (Authentik 2026.8.x, responsive rebuild)
+
+### Context
+
+Authentik 2026.8 renders the login page as a CSS grid inside the shadow root of
+`<ak-flow-executor>` (wrapped in a new `<ak-drawer>`), and appends the Brand Custom
+CSS to **both** the document and **every** web-component shadow root. V3.1.x rules
+such as `.pf-c-login { display: flex }`, the `position: fixed` card on
+`::part(main)` and `overflow: hidden` on `html, body` now fought that grid: the
+card was pushed off-centre (to the right, below the logo box) and long forms could
+not scroll on phones.
+
+### Changed — login layout
+
+- Layout now **built on Authentik's native grid**: the theme only re-tunes
+  `--ak-c-login*` variables, centres the card row and hides the 75dvh spacer.
+- Card width via `--glass-card-width` (30rem), 16px gutters on phones (12px < 560px).
+- `sidebar_left` / `sidebar_right` layouts: full-height glass panel.
+- Background painted on `body::before` on **every** viewport (Authentik hides it
+  below 35rem) and on every non-admin page.
+- Logo: `--glass-logo-size` square envelope (220px) that shrinks with the viewport
+  height (`clamp(72px, 22dvh, 220px)`, 64px on landscape phones).
+- Language picker: centred glass pill in the header row on every viewport,
+  glass dropdown via `appearance: base-select` (from VULGA01 2026.5 fix).
+
+### Changed — stages
+
+- All stage styling scoped through `ak-flow-card` (plus `:host()` aliases for the
+  three nested authenticator-validate stages) instead of long `:host(...)` lists.
+- Social login buttons re-targeted to the 2026.x `<fieldset name="login-sources">`
+  (the old `.pf-c-login__main-footer-links` selectors no longer match anything).
+- "Stay signed in?" Yes / No side by side, stacked on phones.
+- Inputs at 16px (no iOS zoom), 44px min touch targets, autofill kept glassy.
+- Only the "Powered by authentik" footer item is hidden; Brand footer links stay.
+
+### Removed
+
+- Global `.pf-c-form-control`, `.pf-c-button.pf-m-control`, `.pf-c-input-group`,
+  `.pf-c-list.pf-m-inline` rules that leaked into the admin interface.
+- Dead selectors (`ak-interface-user-presentation`, `.pf-c-login__container`,
+  `.pf-c-login__main-footer-links`, `.pf-c-page::before` backgrounds...).
+- `overflow: hidden` / fixed heights on `html`, `body`, `ak-flow-executor`.
+
+### Merged from upstream / forks
+
+- VULGA01 `b939f92` + `0003939` (2026.2 / 2026.5): logo size, background-wrapper
+  overlay, glass locale picker.
+- PloxPlox: user interface background; Anthony6444: slant hiding;
+  WaYyTempest: app icon `object-fit`; sudoBrandino: `-webkit-` prefixes.
+
+### Stats
+
+| Metric | V3.1.3 | V4.0 |
+|---|---|---|
+| Lines | 3222 | 1853 |
+| Login layout strategy | fixed-position card | native Authentik grid |
+
+---
+
 ## [V3.1.2] — 2026-05-20 (brand logo size)
 
 ### Changed

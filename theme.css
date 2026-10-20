@@ -1,124 +1,101 @@
-/* ===== AUTHENTIK GLASSMORPHISM THEME - V3.1.2 (2026.x compat) ===== */
+/* ===== AUTHENTIK GLASSMORPHISM THEME - V4.0 (Authentik 2026.8.x) ===== */
 
 /*
    Glassmorphism theme for Authentik.
-   Tested on Authentik 2026.2.3. Upload via Admin -> System -> Brands -> Custom CSS.
+   Tested against the Authentik 2026.8.4 frontend sources.
+   Install: Admin -> System -> Brands -> (your brand) -> Custom CSS.
 
-   V3.1.2: brand logo size cap raised from 140x70 to 220x220 (square envelope)
-   so square/portrait logos display at their intended size. Landscape logos
-   are unaffected (max-width still 220).
+   HOW AUTHENTIK APPLIES THIS FILE (2026.x)
+   ----------------------------------------
+   The Brand "Custom CSS" is injected TWICE:
+     1. in the document (<style data-id="brand-css">), and
+     2. appended to the adoptedStyleSheets of EVERY Authentik web component
+        shadow root (ak-flow-executor, ak-flow-card, ak-stage-*, ak-interface-user...).
+   So a plain selector such as `.pf-c-login` matches inside the shadow root of
+   <ak-flow-executor>, and `:host(ak-flow-card)` matches inside <ak-flow-card>.
+   This V4 relies on that and NEVER fights Authentik's native CSS grid any more:
+   it only re-tunes its CSS variables and paints the glass on top. This is what
+   makes the layout behave on desktop, tablet and mobile.
 
-   V3.1.1 (cleanup): dedup of redundant :host rules, merged the two
-   @media (max-width: 768px) blocks, consolidated :root shadow-piercing
-   variables into one block. No behavioral change.
+   Login page DOM (2026.8):
+     body > ak-drawer > ak-flow-executor #shadow
+       div.pf-c-login[data-layout]            (CSS grid: header / main / footer)
+         ak-locale-select[part=locale-select]
+         header.pf-c-login__header
+         main.pf-c-login__main[part=main]     (the glass card)
+           div.pf-c-login__main-header.pf-c-brand[part=branding] > img.branding-logo
+           ak-stage-xxx #shadow > ak-flow-card > (form, sources, footer-band)
+         footer.pf-c-login__footer[part=footer] > slot (ak-brand-links)
 
-   V3.1: cleanup of invalid CSS + support for 2026.x new components
-   (ak-flow-card, ak-form-static, ak-flow-input-password, ak-locale-select,
-   ak-tabs vertical, ak-empty-state, pf-m-block buttons, pf-c-tabs__link).
+   CREDITS / MERGED WORK
+     - VULGA01 (original theme, V1 -> V3, 2026.2 & 2026.5 fixes: logo size,
+       background-wrapper overlay, glass language picker via base-select)
+     - AlexJrD fork (V3.1.x: 2026.2 Shadow DOM audit, static error pages,
+       brand logo sizing, mobile screenshots)
+     - Community forks: PloxPlox (user UI background), WaYyTempest (library
+       app icons), Anthony6444 (locale/slant hiding), sudoBrandino (prefixes).
+
+   V4.0 CHANGES (see CHANGELOG.md)
+     - Login layout rebuilt on top of Authentik's native grid (no more
+       position:fixed card, no more overflow:hidden on html/body -> long forms
+       scroll again on mobile).
+     - Background shown on every viewport (Authentik hides it < 560px).
+     - Stage styling scoped through `ak-flow-card` instead of 20+ :host() lists.
+     - Social login buttons re-targeted to the 2026.x <fieldset name=login-sources>.
+     - Only the "Powered by authentik" footer item is hidden (custom links stay).
+     - No global .pf-c-form-control / .pf-c-button rules any more -> the admin
+       interface is left untouched.
 */
 
-/* ===== EASY CUSTOMIZATION ===== */
-/* Change the background image URL below */
+
+/* ========================================================================== */
+/* 0. EASY CUSTOMIZATION                                                      */
+/* ========================================================================== */
+
 :root {
+    /* Background image. To use the background configured on the flow in
+       Authentik instead, replace with: var(--ak-global--background-image) */
     --ak-flow-background: url(https://i.imgur.com/zMTDTxy.jpeg);
+
+    /* Text displayed above the social login buttons */
     --ak-social-separator-text: "Continuer avec";
+
+    /* Accent used for focus rings, active tabs, checkboxes */
     --ak-accent: #d0ced0;
+    --glass-focus: rgba(102, 126, 234, 0.65);
+
+    /* Login card */
+    --glass-card-width: 30rem;              /* 480px max on desktop */
+    --glass-card-bg: rgba(15, 20, 35, 0.55);
+    --glass-card-border: rgba(255, 255, 255, 0.12);
+    --glass-card-blur: blur(40px) saturate(160%);
+    --glass-card-radius: 24px;
+    --glass-card-shadow: 0 12px 48px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+    /* Brand logo inside the login card (square envelope, aspect ratio kept) */
+    --glass-logo-size: 220px;
+
+    /* Controls (inputs, buttons) */
+    --glass-radius: 14px;
+    --glass-control-bg: rgba(255, 255, 255, 0.06);
+    --glass-control-bg-focus: rgba(255, 255, 255, 0.1);
+    --glass-control-border: rgba(255, 255, 255, 0.2);
+    --glass-btn-bg: rgba(255, 255, 255, 0.15);
+    --glass-btn-bg-hover: rgba(255, 255, 255, 0.25);
+    --glass-btn-border: rgba(255, 255, 255, 0.3);
+    --glass-danger-bg: rgba(220, 53, 69, 0.18);
+    --glass-danger-border: rgba(220, 53, 69, 0.4);
+
+    /* Text */
+    --glass-text: #ffffff;
+    --glass-text-muted: rgba(255, 255, 255, 0.72);
+    --glass-text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 
-/* ===== TOTP COPY BUTTON STYLE (NEUTRAL WHITE) ===== */
-:host(ak-stage-authenticator-totp) .pf-c-button.pf-m-secondary {
-    background: rgba(255, 255, 255, 0.1) !important;
-    color: white !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    backdrop-filter: blur(10px) !important;
-    border-radius: 12px !important;
-    padding: 8px 16px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 8px !important;
-    font-size: 14px !important;
-    font-weight: 500 !important;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
-    transition: all 0.3s ease !important;
-    margin-top: 5px !important;
-}
-
-:host(ak-stage-authenticator-totp) .pf-c-button.pf-m-secondary:hover {
-    background: rgba(255, 255, 255, 0.2) !important;
-    border-color: rgba(255, 255, 255, 0.4) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15) !important;
-}
-
-/* Remove reflection for this specific button to avoid glitches */
-:host(ak-stage-authenticator-totp) .pf-c-button.pf-m-secondary::before,
-:host(ak-stage-authenticator-totp) .pf-c-button.pf-m-secondary::after {
-    display: none !important;
-    content: none !important;
-}
-
-/* Fix icon positioning (it was absolute, causing overlap) */
-:host(ak-stage-authenticator-totp) .pf-c-button.pf-m-secondary .pf-c-button__progress {
-    position: static !important;
-    transform: none !important;
-    display: inline-flex !important;
-    align-items: center !important;
-}
-
-:host(ak-stage-authenticator-totp) .qr-container {
-    width: 100% !important;
-    height: auto !important;
-    max-width: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    margin: 10px 0 !important;
-    border-radius: 0 !important;
-}
-
-:host(ak-stage-authenticator-totp) qr-code {
-    /* Only the QR code gets the fixed white box */
-    max-width: 150px !important;
-    width: 150px !important;
-    height: 150px !important;
-    margin: 0 0 15px 0 !important;
-    /* Bottom margin to push button down */
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    border-radius: 12px !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
-    background: white !important;
-    overflow: hidden !important;
-}
-
-:host(ak-stage-authenticator-totp) qr-code svg {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: contain !important;
-}
-
-/* Réduire la taille du texte explicatif sur la page TOTP */
-:host(ak-stage-authenticator-totp) .pf-c-form__group:not([hidden]) p,
-:host(ak-stage-authenticator-totp) .pf-c-form__group:not([hidden]) li {
-    font-size: 13px !important;
-    line-height: 1.4 !important;
-    opacity: 0.9 !important;
-    margin-bottom: 8px !important;
-}
-
-/* Réduire un peu le titre du QR code container si présent */
-:host(ak-stage-authenticator-totp) .pf-c-form__group label {
-    font-size: 14px !important;
-    margin-bottom: 4px !important;
-}
-
-/* ===== FORCE DARK MODE ===== */
+/* ========================================================================== */
+/* 1. FORCE DARK PALETTE (inherits into every shadow root)                    */
+/* ========================================================================== */
 
 :root {
     --pf-global--palette--black-50: oklab(0.9067 -0 0) !important;
@@ -189,1118 +166,1116 @@
     --pf-global--success-color--100: oklab(0.6488 -0.1066 0.0846) !important;
     --pf-global--success-color--200: var(--pf-global--palette--green-50) !important;
 
-    /* Force browser to render standard controls in dark mode */
+    /* Native controls (scrollbars, date pickers, select popups) in dark mode */
     color-scheme: dark !important;
 }
 
-/* Ensure these variables are sticky even if the browser prefers light mode */
-@media (prefers-color-scheme: light) {
-    :root {
-        --pf-global--BackgroundColor--100: oklab(0.2303 -0.0008 -0.0083) !important;
-        --pf-global--BackgroundColor--light-100: oklab(0.2303 -0.0008 -0.0083) !important;
-        --pf-global--Color--100: oklab(0.9067 -0 0) !important;
-        --pf-global--Color--light-100: oklab(0.9067 -0 0) !important;
-        --pf-global--Color--dark-100: oklab(0.9067 -0 0) !important;
-        /* Re-apply the full block if necessary, but usually overrides are enough */
-    }
-}
 
-/* ===== BOUTONS OUI/NON & ACTIONS ===== */
-
-/* Container buttons */
-.pf-c-login .pf-c-form__actions,
-.pf-c-login .pf-c-form__group-control,
-body:has(.pf-c-login) .pf-c-form__actions,
-body:has(.pf-c-login) .pf-c-form__group-control {
-    display: flex !important;
-    gap: 15px !important;
-    margin-top: 25px !important;
-    justify-content: space-between !important;
-    overflow: visible !important;
-    padding: 5px !important;
-}
-
-/* Base button styles */
-.pf-c-login .pf-c-form__actions button,
-.pf-c-login .pf-c-form__group-control button,
-body:has(.pf-c-login) .pf-c-form__actions button,
-body:has(.pf-c-login) .pf-c-form__group-control button,
-.pf-c-login button[type="button"],
-body:has(.pf-c-login) button[type="button"],
-:host(ak-stage-user-login) button[type="submit"] {
-    border-radius: 14px !important;
-    padding: 10px 20px !important;
-    font-weight: 600 !important;
-    font-size: 15px !important;
-    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-    text-transform: none !important;
-    border: none !important;
-    backdrop-filter: blur(20px) saturate(130%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(130%) !important;
-    position: relative !important;
-    overflow: hidden !important;
-    box-sizing: border-box !important;
-    min-width: 120px !important;
-    cursor: pointer !important;
-    outline: none !important;
-}
-
-/* ========================================= */
-/* LOGIN BUTTON - FORCE WHITE GLASSMORPHISM  */
-/* ========================================= */
-
-/* Force white for identification login button */
-.pf-c-login .pf-c-form__actions button:first-child,
-.pf-c-login .pf-c-form__group-control button:first-child,
-body:has(.pf-c-login) .pf-c-form__actions button:first-child,
-body:has(.pf-c-login) .pf-c-form__group-control button:first-child,
-.pf-c-login button[type="button"]:first-of-type,
-body:has(.pf-c-login) button[type="button"]:first-of-type,
-:host(ak-stage-identification) .pf-c-button.pf-m-primary,
-:host(ak-stage-identification) button[type="submit"].pf-c-button.pf-m-primary {
-    background: rgba(255, 255, 255, 0.15) !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    color: white !important;
-    font-weight: 600 !important;
-    padding: 14px 24px !important;
-    border-radius: 14px !important;
-    transition: all 0.3s ease !important;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(255, 255, 255, 0.1) !important;
-}
-
-:host(ak-stage-identification) .pf-c-button.pf-m-primary:hover,
-:host(ak-stage-identification) button[type="submit"].pf-c-button.pf-m-primary:hover {
-    background: rgba(255, 255, 255, 0.25) !important;
-    border-color: rgba(255, 255, 255, 0.4) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(255, 255, 255, 0.15) !important;
-}
-
-/* ========================================= */
-/* STAY CONNECTED BUTTONS (USER LOGIN STAGE) */
-/* ========================================= */
-
-/* Neutralize 'Yes' and 'No' buttons to Standard Glass Style */
-:host(ak-stage-user-login) .pf-c-button.pf-m-primary,
-:host(ak-stage-user-login) .pf-c-button.pf-m-secondary {
-    background: rgba(255, 255, 255, 0.08) !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    color: white !important;
-    font-weight: 500 !important;
-    padding: 10px 24px !important;
-    border-radius: 14px !important;
-    transition: all 0.3s ease !important;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
-    margin: 0 !important;
-    /* Reset margins if inherited */
-}
-
-:host(ak-stage-user-login) .pf-c-button.pf-m-primary:hover,
-:host(ak-stage-user-login) .pf-c-button.pf-m-secondary:hover {
-    background: rgba(255, 255, 255, 0.2) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2) !important;
-    border-color: rgba(255, 255, 255, 0.4) !important;
-}
-
-/* Remove colored pseudo-elements/reflections for Stay Connected */
-:host(ak-stage-user-login) .pf-c-button.pf-m-primary::before,
-:host(ak-stage-user-login) .pf-c-button.pf-m-secondary::before {
-    display: none !important;
-    content: none !important;
-}
-
-/* ========================================= */
-/* SHARED ANIMATIONS & FIXES                 */
-/* ========================================= */
-
-/* Reflection effect for Login Button ONLY */
-:host(ak-stage-identification) .pf-c-button.pf-m-primary::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg,
-            transparent 0%,
-            rgba(255, 255, 255, 0.2) 50%,
-            transparent 100%);
-    transition: left 0.6s ease;
-    z-index: 1;
-    border-radius: 14px;
-}
-
-:host(ak-stage-identification) .pf-c-button.pf-m-primary:hover::before {
-    left: 100%;
-}
-
-/* Z-index fix for text */
-:host(ak-stage-user-login) .pf-c-button.pf-m-primary *,
-:host(ak-stage-user-login) .pf-c-button.pf-m-secondary *,
-:host(ak-stage-identification) .pf-c-button.pf-m-primary *,
-:host(ak-stage-identification) .pf-c-button.pf-m-secondary * {
-    position: relative !important;
-    z-index: 2 !important;
-}
-
-
-
-:host(ak-stage-user-login) .pf-c-button.pf-m-primary::after,
-:host(ak-stage-user-login) .pf-c-button.pf-m-secondary::after,
-:host(ak-stage-identification) .pf-c-button.pf-m-primary::after,
-:host(ak-stage-identification) .pf-c-button.pf-m-secondary::after {
-    border: none !important;
-    display: none !important;
-}
-
-:host(ak-stage-user-login) .pf-c-button:focus,
-:host(ak-stage-user-login) .pf-c-button:active,
-:host(ak-stage-identification) .pf-c-button:focus,
-:host(ak-stage-identification) .pf-c-button:active {
-    outline: none !important;
-}
-
-/* Button 'No' / Secondary */
-:host(ak-stage-user-login) .pf-c-button.pf-m-secondary,
-:host(ak-stage-identification) .pf-c-button.pf-m-secondary {
-    background: rgba(220, 53, 69, 0.15) !important;
-    color: rgba(255, 255, 255, 0.9) !important;
-    border: 1.5px solid rgba(220, 53, 69, 0.3) !important;
-    box-shadow:
-        0 4px 15px rgba(220, 53, 69, 0.1),
-        0 2px 8px rgba(0, 0, 0, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-}
-
-/* Reflection effect 'No' */
-:host(ak-stage-user-login) .pf-c-button.pf-m-secondary::before,
-:host(ak-stage-identification) .pf-c-button.pf-m-secondary::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg,
-            transparent 0%,
-            rgba(255, 255, 255, 0.15) 50%,
-            transparent 100%);
-    transition: left 0.6s ease;
-    z-index: 1;
-    border-radius: 14px;
-}
-
-:host(ak-stage-user-login) .pf-c-button.pf-m-secondary:hover::before,
-:host(ak-stage-identification) .pf-c-button.pf-m-secondary:hover::before {
-    left: 100%;
-}
-
-:host(ak-stage-user-login) .pf-c-button.pf-m-secondary:hover,
-:host(ak-stage-identification) .pf-c-button.pf-m-secondary:hover {
-    background: rgba(220, 53, 69, 0.25) !important;
-    border-color: rgba(220, 53, 69, 0.45) !important;
-    color: white !important;
-    transform: translateY(-1px) !important;
-    box-shadow:
-        0 8px 25px rgba(220, 53, 69, 0.2),
-        0 4px 12px rgba(0, 0, 0, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
-}
-
-/* ========================================= */
-/* SOCIAL LOGIN BUTTONS (GLASSMORPHISM)      */
-/* ========================================= */
-
-/* Base style for all social login buttons */
-:host(ak-stage-identification) .source-button {
-    background: rgba(255, 255, 255, 0.08) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    color: white !important;
-    border-radius: 12px !important;
-    padding: 10px 20px !important;
-    transition: all 0.3s ease !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    text-decoration: none !important;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
-    position: relative !important;
-    font-weight: 600 !important;
-    font-size: 15px !important;
-    gap: 8px !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
-    overflow: hidden !important;
-}
-
-:host(ak-stage-identification) .source-button:hover {
-    background: rgba(255, 255, 255, 0.2) !important;
-    transform: translateY(-2px) scale(1.02) !important;
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2) !important;
-    border-color: rgba(255, 255, 255, 0.4) !important;
-}
-
-/* Discord-specific branding */
-:host(ak-stage-identification) button[name*="discord"].source-button {
-    background: rgba(88, 101, 242, 0.25) !important;
-    border-color: rgba(88, 101, 242, 0.4) !important;
-    box-shadow:
-        0 4px 12px rgba(88, 101, 242, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-}
-
-:host(ak-stage-identification) button[name*="discord"].source-button:hover {
-    background: rgba(88, 101, 242, 0.35) !important;
-    border-color: rgba(88, 101, 242, 0.6) !important;
-    box-shadow:
-        0 8px 20px rgba(88, 101, 242, 0.35),
-        0 0 0 2px rgba(88, 101, 242, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
-}
-
-/* Shine effect on hover for all social buttons */
-:host(ak-stage-identification) .source-button:hover::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: -70%;
-    width: 55%;
-    height: 100%;
-    background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.5) 60%, transparent 100%);
-    transform: skewX(-25deg);
-    animation: socialShine 0.65s linear 1;
-    pointer-events: none;
-}
-
-@keyframes socialShine {
-    100% {
-        left: 130%;
-    }
-}
-
-/* Icon styling within social buttons */
-:host(ak-stage-identification) .source-button img,
-:host(ak-stage-identification) .source-button span.pf-c-button__icon {
-    width: 18px !important;
-    height: 18px !important;
-    flex-shrink: 0;
-}
-
-/* Make Discord icon white */
-:host(ak-stage-identification) button[name*="discord"].source-button img {
-    filter: brightness(0) invert(1);
-}
-
-/* Google-specific branding */
-:host(ak-stage-identification) button[name*="google"].source-button {
-    background: rgba(66, 133, 244, 0.25) !important;
-    border-color: rgba(66, 133, 244, 0.4) !important;
-}
-
-:host(ak-stage-identification) button[name*="google"].source-button:hover {
-    background: rgba(66, 133, 244, 0.35) !important;
-    border-color: rgba(66, 133, 244, 0.6) !important;
-    box-shadow:
-        0 8px 20px rgba(66, 133, 244, 0.35),
-        0 0 0 2px rgba(66, 133, 244, 0.2) !important;
-}
-
-/* (Mobile-specific button rules for ak-stage-user-login + form__actions are
-   in the consolidated @media (max-width: 768px) block at the bottom of this
-   file — see "RESPONSIVE MOBILE" section.) */
-
-/* ===== RADIO & CHECKBOX (REMEMBER ME) ===== */
-
-.pf-c-login .pf-c-check,
-.pf-c-login .pf-c-switch,
-body:has(.pf-c-login) .pf-c-check,
-body:has(.pf-c-login) .pf-c-switch {
-    margin: 20px 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-}
-
-.pf-c-login .pf-c-check__input,
-.pf-c-login .pf-c-switch__input,
-.pf-c-login input[type="checkbox"],
-body:has(.pf-c-login) .pf-c-check__input,
-body:has(.pf-c-login) .pf-c-switch__input,
-body:has(.pf-c-login) input[type="checkbox"],
-input[id*="authentik-remember-me"],
-input[name*="remember"] {
-    appearance: none !important;
-    -webkit-appearance: none !important;
-    width: 16px !important;
-    height: 16px !important;
-    background: rgba(255, 255, 255, 0.08) !important;
-    border: 2px solid rgba(255, 255, 255, 0.3) !important;
-    border-radius: 5px !important;
-    margin-right: 8px !important;
-    position: relative !important;
-    vertical-align: middle !important;
-    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
-    box-shadow:
-        0 4px 15px rgba(0, 0, 0, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-    cursor: pointer !important;
-}
-
-.pf-c-login .pf-c-check__input:checked,
-.pf-c-login .pf-c-switch__input:checked,
-.pf-c-login input[type="checkbox"]:checked,
-body:has(.pf-c-login) .pf-c-check__input:checked,
-body:has(.pf-c-login) .pf-c-switch__input:checked,
-body:has(.pf-c-login) input[type="checkbox"]:checked,
-input[id*="authentik-remember-me"]:checked,
-input[name*="remember"]:checked {
-    background: rgba(102, 126, 234, 0.7) !important;
-    border-color: rgba(102, 126, 234, 0.8) !important;
-    box-shadow:
-        0 0 0 2px rgba(102, 126, 234, 0.2),
-        0 6px 20px rgba(102, 126, 234, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
-}
-
-.pf-c-login .pf-c-check__input:checked::after,
-.pf-c-login .pf-c-switch__input:checked::after,
-.pf-c-login input[type="checkbox"]:checked::after,
-body:has(.pf-c-login) .pf-c-check__input:checked::after,
-body:has(.pf-c-login) .pf-c-switch__input:checked::after,
-body:has(.pf-c-login) input[type="checkbox"]:checked::after,
-input[id*="authentik-remember-me"]:checked::after,
-input[name*="remember"]:checked::after {
-    content: '✓' !important;
-    position: absolute !important;
-    left: 50% !important;
-    top: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    color: white !important;
-    font-size: 10px !important;
-    font-weight: bold !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
-}
-
-.pf-c-login .pf-c-check__label,
-.pf-c-login .pf-c-switch__label {
-    color: rgba(255, 255, 255, 0.9) !important;
-    font-weight: 400 !important;
-    font-size: 14px !important;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
-}
-
-/* ===== HIDE 'Powered by authentik' ===== */
-/* :contains() removed — invalid CSS (jQuery only). The fallback rules below
-   (ak-brand-links, .pf-c-list.pf-m-inline) already hide the brand footer. */
-
-.pf-c-login__footer .pf-c-list.pf-m-inline {
-    display: none !important;
-    visibility: hidden !important;
-}
-
-/* Fallback selector: hide all brand links elements */
-ak-brand-links,
-.pf-c-login__footer .pf-c-login__footer .pf-c-list li:last-child,
-*[data-ouia-component-type="PF4/Footer"],
-ul.pf-c-list.pf-m-inline,
-.pf-c-list.pf-m-inline {
-    display: none !important;
-    visibility: hidden !important;
-}
-
-/* ===== LOGIN PAGE MODERN DESIGN ===== */
-
-/* Page Background */
-.pf-c-login .pf-c-page,
-body:has(.pf-c-login) .pf-c-page {
-    /* Fixed background workaround for iOS */
-    position: relative !important;
-    min-height: 100vh !important;
-    min-height: 100dvh !important;
-    z-index: 0 !important;
-}
-
-.pf-c-login .pf-c-page::before,
-body:has(.pf-c-login) .pf-c-page::before {
-    content: "" !important;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-    z-index: -1 !important;
-    pointer-events: none !important;
-}
-
-/* Login page wrapper */
-.pf-c-login,
-body:has(.pf-c-login) {
-    position: relative !important;
-    min-height: 100vh !important;
-    /* SAFEST CENTER ALIGNMENT */
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    /* justify-content: center REMOVED: prevents top clipping */
-    overflow-y: auto !important;
-    padding: 20px !important;
-}
-
-/* Login Container with Glass effect */
-.pf-c-login .pf-c-login__container {
-    background:
-        rgba(255, 255, 255, 0.03),
-        url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.1'/%3E%3C/svg%3E") !important;
-    backdrop-filter: blur(40px) !important;
-    -webkit-backdrop-filter: blur(40px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-radius: 24px !important;
-    box-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-    padding: 40px !important;
-    /* Reduced padding */
-    /* Desktop default: 450px min-width */
-    min-width: 450px !important;
-    /* Combined with max-width for responsiveness */
-    width: 100% !important;
-    max-width: 700px !important;
-    transition: all 0.3s ease !important;
-    position: relative !important;
-
-    /* THE MAGICAL FIX: Safe Centering */
-    margin: auto !important;
-
-    /* STRICT SIZING: Prevent stretching */
-    height: auto !important;
-    flex-grow: 0 !important;
-    flex-shrink: 0 !important;
-    flex-basis: auto !important;
-
-    max-height: none !important;
-    overflow: visible !important;
-
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-
-    /* NUCLEAR SAFEGUARD */
-    align-self: center !important;
-    justify-self: center !important;
-}
-
-/* Login Content */
-.pf-c-login .pf-c-login__main {
-    box-sizing: border-box;
-    background: transparent !important;
-    backdrop-filter: blur(20px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 66px !important;
-    box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 16px, rgba(255, 255, 255, 0.05) 0px 1px 0px inset !important;
-    padding: 45px !important;
-    position: relative !important;
-    z-index: 10 !important;
-
-    /* NUCLEAR SIZING on the ACTUAL BOX */
-    height: fit-content !important;
-    min-height: 0 !important;
-    flex-grow: 0 !important;
-
-    /* Allow box to grow with content */
-    overflow-y: visible !important;
-    min-width: auto !important;
-    max-height: none !important;
-    width: 100% !important;
-    /* iOS Fix: width 100% instead of 54vh */
-    max-width: 570px !important;
-    /* iOS Fix: max-width px instead of vh */
-    margin: auto !important;
-    height: fit-content !important;
-    /* Ensure it shrinks to content */
-}
-
-/* Hide empty social links container to prevent spacing issues */
-.pf-c-login__main-footer-links:empty,
-ak-brand-links:empty {
-    display: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-/* Agrandissement exceptionnel pour le stage TOTP */
-.pf-c-login .pf-c-login__main:has(ak-stage-authenticator-totp),
-body:has(.pf-c-login) .pf-c-login__main:has(ak-stage-authenticator-totp) {
-    max-height: 90vh !important;
-    max-width: 600px !important;
-    width: auto !important;
-    padding-top: 30px !important;
-    padding-bottom: 30px !important;
-}
-
-/* Overlay de chargement avec le même arrondi */
-ak-loading-overlay {
-    border-radius: 66px !important;
-    overflow: hidden !important;
-}
-
-/* Force White Text in Login Container - Shadow DOM Compatible */
-:host(ak-flow-executor) .pf-c-title,
-:host(ak-flow-executor) h1,
-:host(ak-flow-executor) h2,
-:host(ak-flow-executor) h3,
-:host(ak-flow-executor) p,
-:host(ak-flow-executor) span,
-:host(ak-flow-executor) div,
-:host(ak-flow-executor) label,
-:host(ak-flow-executor) .pf-c-form__label,
-:host(ak-stage-identification) label,
-:host(ak-stage-password) label,
-:host(ak-stage-identification) .pf-c-title,
-:host(ak-stage-password) .pf-c-title,
-:host(ak-stage-consent) .pf-c-title,
-:host(ak-stage-authenticator-validate) .pf-c-title,
-:host(ak-stage-authenticator-validate) label,
-:host(ak-stage-authenticator-validate-code) .pf-c-title,
-:host(ak-stage-authenticator-validate-code) label,
-:host(ak-stage-authenticator-validate-duo) .pf-c-title,
-:host(ak-stage-authenticator-validate-duo) label,
-:host(ak-user-settings) .pf-c-title,
-:host(ak-user-settings) label,
-:host(ak-user-settings) .pf-c-card__title,
-:host(ak-user-settings-flow-executor) .pf-c-card__title,
-:host(ak-user-settings-password) .pf-c-card__title,
-:host(ak-form-element-horizontal) label,
-:host(ak-form-element-horizontal) .pf-c-form__label,
-:host(ak-user-stage-prompt) label,
-:host(ak-user-stage-prompt) .pf-c-title,
-:host(ak-stage-prompt) label,
-:host(ak-stage-prompt) .pf-c-title {
-    color: white !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
-}
-
-/* Links in Login */
-.pf-c-login a {
-    color: rgba(255, 255, 255, 0.9) !important;
-    text-decoration: none !important;
-    transition: all 0.2s ease !important;
-}
-
-.pf-c-login a:hover {
-    color: white !important;
-    text-shadow: 0 0 8px rgba(255, 255, 255, 0.6) !important;
-    text-decoration: underline !important;
-}
-
-/* Form Inputs - Shadow DOM targeted */
-:host(ak-stage-identification) .pf-c-form-control,
-:host(ak-stage-password) .pf-c-form-control,
-:host(ak-flow-executor) .pf-c-form-control,
-:host(ak-stage-identification) input:not([type="checkbox"]),
-:host(ak-stage-password) input:not([type="checkbox"]),
-:host(ak-stage-authenticator-validate) .pf-c-form-control,
-:host(ak-stage-authenticator-validate) input:not([type="checkbox"]),
-:host(ak-stage-authenticator-validate-code) .pf-c-form-control,
-:host(ak-stage-authenticator-validate-code) input:not([type="checkbox"]),
-:host(ak-stage-authenticator-totp) .pf-c-form-control,
-:host(ak-stage-authenticator-totp) input:not([type="checkbox"]),
-:host(ak-user-settings) .pf-c-form-control,
-:host(ak-user-settings-flow-executor) .pf-c-form-control,
-:host(ak-user-settings-password) .pf-c-form-control,
-:host(ak-form-element-horizontal) .pf-c-form-control,
-:host(ak-form-element-horizontal) input,
-:host(ak-form-element-horizontal) select,
-:host(ak-user-stage-prompt) .pf-c-form-control,
-:host(ak-user-stage-prompt) input,
-:host(ak-user-stage-prompt) select,
-:host(ak-stage-prompt) .pf-c-form-control,
-:host(ak-stage-prompt) input,
-:host(ak-stage-prompt) select {
-    background-color: rgba(255, 255, 255, 0.06) !important;
-    border: 1.5px solid rgba(255, 255, 255, 0.2) !important;
-    border-radius: 14px !important;
-    padding: 10px 15px !important;
-    font-size: 16px !important;
-    color: white !important;
-    height: auto !important;
-    min-height: 40px !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    backdrop-filter: blur(20px) saturate(130%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(130%) !important;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
-}
-
-/* Ensure dropdown options are readable and select text is visible */
-:host(ak-form-element-horizontal) select,
-:host(ak-user-stage-prompt) select,
-:host(ak-stage-prompt) select {
-    color: white !important;
-    background-color: rgba(255, 255, 255, 0.1) !important;
-}
-
-:host(ak-form-element-horizontal) select option,
-:host(ak-user-stage-prompt) select option,
-:host(ak-stage-prompt) select option {
-    background-color: #1f1f1f !important;
-    color: white !important;
-    text-shadow: none !important;
-}
-
-:host(ak-stage-identification) .pf-c-form-control:focus,
-:host(ak-stage-password) .pf-c-form-control:focus,
-:host(ak-flow-executor) .pf-c-form-control:focus,
-:host(ak-stage-identification) input:not([type="checkbox"]):focus,
-:host(ak-stage-password) input:not([type="checkbox"]):focus,
-:host(ak-stage-authenticator-validate) .pf-c-form-control:focus,
-:host(ak-stage-authenticator-validate) input:not([type="checkbox"]):focus,
-:host(ak-stage-authenticator-validate-code) .pf-c-form-control:focus,
-:host(ak-stage-authenticator-validate-code) input:not([type="checkbox"]):focus,
-:host(ak-user-settings) .pf-c-form-control:focus,
-:host(ak-user-settings-flow-executor) .pf-c-form-control:focus,
-:host(ak-user-settings-password) .pf-c-form-control:focus,
-:host(ak-form-element-horizontal) .pf-c-form-control:focus,
-:host(ak-form-element-horizontal) input:focus,
-:host(ak-form-element-horizontal) select:focus,
-:host(ak-user-stage-prompt) .pf-c-form-control:focus,
-:host(ak-user-stage-prompt) input:focus,
-:host(ak-user-stage-prompt) select:focus,
-:host(ak-stage-prompt) .pf-c-form-control:focus,
-:host(ak-stage-prompt) input:focus,
-:host(ak-stage-prompt) select:focus {
-    background-color: rgba(255, 255, 255, 0.08) !important;
-    border-color: rgba(102, 126, 234, 0.5) !important;
-    border-width: 1.5px !important;
-    outline: none !important;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
-}
-
-/* Primary Button Login - Shadow DOM targeted */
-:host(ak-stage-identification) .pf-c-button.pf-m-primary,
-:host(ak-stage-password) .pf-c-button.pf-m-primary,
-:host(ak-stage-consent) .pf-c-button.pf-m-primary,
-:host(ak-stage-identification) button.pf-m-primary,
-:host(ak-stage-password) button.pf-m-primary,
-:host(ak-stage-authenticator-validate) .pf-c-button.pf-m-primary,
-:host(ak-stage-authenticator-validate-code) .pf-c-button.pf-m-primary,
-:host(ak-stage-authenticator-totp) .pf-c-button.pf-m-primary,
-:host(ak-stage-authenticator-validate-duo) .pf-c-button.pf-m-primary,
-:host(ak-stage-authenticator-validate-webauthn) .pf-c-button.pf-m-primary,
-:host(ak-user-settings) .pf-c-button.pf-m-primary,
-:host(ak-user-settings-flow-executor) .pf-c-button.pf-m-primary,
-:host(ak-user-settings-password) .pf-c-button.pf-m-primary,
-:host(ak-user-stage-prompt) .pf-c-button.pf-m-primary,
-:host(ak-form-element-horizontal) .pf-c-button.pf-m-primary,
-:host(ak-stage-authenticator-static) .pf-c-button.pf-m-primary,
-:host(ak-stage-prompt) .pf-c-button.pf-m-primary,
-/* FIX: Connect Button in User Settings */
-:host(ak-user-settings-source) .pf-c-button.pf-m-primary {
-    background: rgba(255, 255, 255, 0.15) !important;
-    color: white !important;
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    border-radius: 14px !important;
-    box-shadow:
-        0 6px 20px rgba(0, 0, 0, 0.15),
-        0 2px 8px rgba(255, 255, 255, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
-    transition: all 0.3s ease !important;
-    text-transform: none !important;
-    font-weight: 600 !important;
-    font-size: 16px !important;
-    /* Force height */
-    padding-top: 12px !important;
-    padding-bottom: 12px !important;
-}
-
-/* FIX: Disconnect Button (Danger) in User Settings */
-:host(ak-user-settings-source) .pf-c-button.pf-m-danger {
-    background: rgba(220, 20, 60, 0.25) !important;
-    /* Red tint */
-    color: white !important;
-    border: 1px solid rgba(255, 100, 100, 0.3) !important;
-    border-radius: 14px !important;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
-    transition: all 0.3s ease !important;
-    font-weight: 600 !important;
-    font-size: 14px !important;
-    /* Slightly smaller than primary */
-    text-transform: none !important;
-}
-
-:host(ak-user-settings-source) .pf-c-button.pf-m-danger:hover {
-    background: rgba(220, 20, 60, 0.4) !important;
-    /* Brighter red on hover */
-    border-color: rgba(255, 100, 100, 0.6) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25) !important;
-    color: white !important;
-}
-
-/* Secondary Button (Security Key, WebAuthn, etc.) - Glassmorphism */
-:host(ak-stage-identification) .pf-c-button.pf-m-secondary,
-:host(ak-stage-password) .pf-c-button.pf-m-secondary,
-:host(ak-stage-authenticator-validate) .pf-c-button.pf-m-secondary,
-:host(ak-stage-authenticator-validate-code) .pf-c-button.pf-m-secondary,
-:host(ak-stage-authenticator-webauthn) .pf-c-button.pf-m-secondary,
-:host(ak-flow-executor) .pf-c-button.pf-m-secondary {
-    background: rgba(255, 255, 255, 0.08) !important;
-    color: white !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-radius: 14px !important;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
-    transition: all 0.3s ease !important;
-    font-weight: 500 !important;
-    margin-top: 10px !important;
-    display: block !important;
-    width: 100% !important;
-    text-align: center !important;
-}
-
-:host(ak-stage-identification) .pf-c-button.pf-m-secondary:hover,
-:host(ak-stage-password) .pf-c-button.pf-m-secondary:hover,
-:host(ak-stage-authenticator-validate) .pf-c-button.pf-m-secondary:hover,
-:host(ak-stage-authenticator-validate-code) .pf-c-button.pf-m-secondary:hover,
-:host(ak-stage-authenticator-webauthn) .pf-c-button.pf-m-secondary:hover,
-:host(ak-flow-executor) .pf-c-button.pf-m-secondary:hover {
-    background: rgba(255, 255, 255, 0.15) !important;
-    border-color: rgba(255, 255, 255, 0.4) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2) !important;
-    color: white !important;
-}
-
-/* KEY ICON & GLITCH FIX */
-/* Repurpose ::before to be a Key Icon instead of a glitchy bar */
-:host(ak-stage-identification) .pf-c-button.pf-m-secondary::before,
-:host(ak-stage-password) .pf-c-button.pf-m-secondary::before,
-:host(ak-stage-authenticator-validate) .pf-c-button.pf-m-secondary::before,
-:host(ak-flow-executor) .pf-c-button.pf-m-secondary::before {
-    content: "" !important;
-    display: inline-block !important;
-    width: 16px !important;
-    height: 16px !important;
-    margin-right: 8px !important;
-    /* Font Awesome Key Icon (White) */
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='white'%3E%3Cpath d='M336 352c97.2 0 176-78.8 176-176S433.2 0 336 0S160 78.8 160 176c0 18.7 2.9 36.6 8.3 53.7L7 391c-4.5 4.5-7 10.6-7 17v80c0 13.3 10.7 24 24 24h80c13.3 0 24-10.7 24-24V448h40c13.3 0 24-10.7 24-24V384h40c6.4 0 12.5-2.5 17-7l33.3-33.3c16.9 5.2 38.6 352zM336 96a80 80 0 1 1 0 160 80 80 0 1 1 0-160z'/%3E%3C/svg%3E") !important;
-    background-repeat: no-repeat !important;
-    background-position: center !important;
-    background-size: contain !important;
-    /* Reset any glitchy borders/backgrounds from previous states */
-    border: none !important;
-    background-color: transparent !important;
-    position: static !important;
-    transform: none !important;
-}
-
-:host(ak-stage-identification) .pf-c-button.pf-m-primary:hover,
-:host(ak-stage-password) .pf-c-button.pf-m-primary:hover,
-:host(ak-stage-identification) button.pf-m-primary:hover,
-:host(ak-stage-password) button.pf-m-primary:hover,
-:host(ak-stage-authenticator-validate) .pf-c-button.pf-m-primary:hover,
-:host(ak-stage-authenticator-validate-code) .pf-c-button.pf-m-primary:hover,
-:host(ak-stage-authenticator-validate-duo) .pf-c-button.pf-m-primary:hover,
-:host(ak-stage-authenticator-validate-webauthn) .pf-c-button.pf-m-primary:hover,
-:host(ak-user-settings) .pf-c-button.pf-m-primary:hover,
-:host(ak-user-settings-flow-executor) .pf-c-button.pf-m-primary:hover,
-:host(ak-user-settings-password) .pf-c-button.pf-m-primary:hover,
-:host(ak-user-stage-prompt) .pf-c-button.pf-m-primary:hover,
-:host(ak-form-element-horizontal) .pf-c-button.pf-m-primary:hover,
-:host(ak-stage-authenticator-static) .pf-c-button.pf-m-primary:hover,
-:host(ak-stage-prompt) .pf-c-button.pf-m-primary:hover,
-:host(ak-user-settings-source) .pf-c-button.pf-m-primary:hover {
-    background: rgba(255, 255, 255, 0.25) !important;
-    border-color: rgba(255, 255, 255, 0.4) !important;
-    transform: translateY(-2px) !important;
-    box-shadow:
-        0 10px 30px rgba(0, 0, 0, 0.2),
-        0 4px 12px rgba(255, 255, 255, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
-}
-
-/* Remove default PatternFly after element on buttons inside specific hosts */
-:host(ak-stage-identification) .pf-c-button::after,
-:host(ak-stage-password) .pf-c-button::after,
-:host(ak-stage-consent) .pf-c-button::after {
-    display: none !important;
-    content: none !important;
-}
-
-/* Footer "Forgot Password" Band */
-.pf-c-login__main-footer-band {
-    background: transparent !important;
-    backdrop-filter: none !important;
-    border: none !important;
-    box-shadow: none !important;
-    margin-top: 10px !important;
-    display: flex !important;
-    justify-content: center !important;
-}
-
-.pf-c-login__main-footer-band a {
-    color: rgba(255, 255, 255, 0.6) !important;
-    text-decoration: none !important;
-    font-size: 14px !important;
-    transition: all 0.2s ease !important;
-}
-
-.pf-c-login__main-footer-band a:hover {
-    color: white !important;
-    text-decoration: underline !important;
-    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5) !important;
-}
-
-/* ===== UI GLOBAL (SCROLLBAR) ===== */
+/* ========================================================================== */
+/* 2. PATTERNFLY / AUTHENTIK VARIABLES (inherit through shadow boundaries)    */
+/* ========================================================================== */
 
 :root {
-    --sb-size: 10px;
-    --sb-radius: 12px;
+    /* Form controls */
+    --pf-c-form-control--BackgroundColor: var(--glass-control-bg);
+    --pf-c-form-control--Color: var(--glass-text);
+    --pf-c-form-control--BorderTopColor: var(--glass-control-border);
+    --pf-c-form-control--BorderRightColor: var(--glass-control-border);
+    --pf-c-form-control--BorderLeftColor: var(--glass-control-border);
+    --pf-c-form-control--BorderBottomColor: rgba(255, 255, 255, 0.4);
+    --pf-c-form-control--PlaceholderColor: rgba(255, 255, 255, 0.5);
+    --pf-c-form-control--hover--BorderBottomColor: var(--glass-focus);
+    --pf-c-form-control--focus--BorderBottomColor: var(--glass-focus);
+
+    /* Form labels */
+    --pf-c-form__label--Color: var(--glass-text);
+    --pf-c-form__label-text--Color: var(--glass-text);
+    --pf-c-form__label-required--Color: #ff6b6b;
+
+    /* Login (native Authentik tokens, see login-tokens.css) */
+    --ak-c-login--MaxWidth: var(--glass-card-width);
+    --ak-c-login__main--BackgroundColor: transparent;
+    --ak-c-login__main--Color: var(--glass-text);
+    --ak-c-login__main--BoxShadow: var(--glass-card-shadow);
+    --ak-c-login__footer--Color: var(--glass-text-muted);
+    --ak-c-login--BackgroundColorOverlay: transparent;
+    --pf-c-login__main--BackgroundColor: transparent;
+
+    /* Dividers ("Or") */
+    --ak-c-divider--color: rgba(255, 255, 255, 0.22);
+    --ak-c-divider--strong-color: rgba(255, 255, 255, 0.35);
+
+    /* Tables (user settings lists) */
+    --pf-c-table--BackgroundColor: transparent;
+    --pf-c-table--cell--BackgroundColor: transparent;
+    --pf-c-table--cell--Color: rgba(255, 255, 255, 0.9);
+    --pf-c-table--BorderColor: rgba(255, 255, 255, 0.1);
+    --pf-c-table--cell--BorderBottomColor: rgba(255, 255, 255, 0.1);
+    --pf-c-table--m-grid-md__tr--BorderColor: rgba(255, 255, 255, 0.08);
+    --pf-c-table__sort__button--Color: rgba(255, 255, 255, 0.85);
+    --pf-c-table__sort__button--hover--Color: var(--glass-text);
+    --pf-c-table__sort--m-selected__button--Color: var(--glass-text);
+    --pf-c-table-thead--cell--Color: var(--glass-text);
+    --pf-c-table-thead--cell--FontSize: 13px;
+
+    /* Tooltips (PF4 + PF5 web components) */
+    --pf-c-tooltip--BackgroundColor: rgba(20, 20, 30, 0.95);
+    --pf-c-tooltip__content--Color: var(--glass-text);
+    --pf-c-tooltip__content--BackgroundColor: rgba(20, 20, 30, 0.95);
+    --pf-c-tooltip__content--BorderRadius: 8px;
+    --pf-c-tooltip__content--FontSize: 13px;
+    --pf-v5-c-tooltip--BackgroundColor: rgba(20, 20, 30, 0.95);
+    --pf-v5-c-tooltip__content--Color: var(--glass-text);
+    --pf-v5-c-tooltip__content--BackgroundColor: rgba(20, 20, 30, 0.95);
+
+    /* Toolbars / pagination / cards (user settings) */
+    --pf-c-toolbar--BackgroundColor: transparent;
+    --pf-c-pagination--BackgroundColor: transparent;
+    --pf-c-pagination__nav-control__button--Color: var(--glass-text);
+    --pf-c-card--BackgroundColor: rgba(255, 255, 255, 0.05);
+    --pf-c-card__title--Color: var(--glass-text);
+    --pf-c-card__body--Color: rgba(255, 255, 255, 0.9);
+
+    /* Header brand logo (user + admin interfaces) */
+    --pf-c-page__header-brand--c-brand--MaxHeight: 60px;
+    --pf-c-brand--Height: 60px;
+    --pf-c-brand--MaxHeight: 60px;
+
+    /* Scrollbars */
     --sb-track: rgba(255, 255, 255, 0.06);
     --sb-thumb: rgba(255, 255, 255, 0.28);
     --sb-thumb-hover: rgba(255, 255, 255, 0.42);
-    --sb-thumb-active: rgba(255, 255, 255, 0.55);
 }
 
 *::-webkit-scrollbar {
-    width: var(--sb-size);
-    height: var(--sb-size);
+    width: 10px;
+    height: 10px;
 }
 
 *::-webkit-scrollbar-track {
     background: var(--sb-track);
-    border-radius: var(--sb-radius);
-    margin: 4px;
+    border-radius: 12px;
 }
 
 *::-webkit-scrollbar-thumb {
     background-color: var(--sb-thumb);
-    border-radius: var(--sb-radius);
+    border-radius: 12px;
     border: 2px solid transparent;
     background-clip: padding-box;
 }
 
-/* ===== APPS & DASHBOARD ===== */
-
-/* Application Cards & User Settings Cards */
-.pf-c-card.pf-m-compact,
-.pf-c-expandable-section.pf-m-display-lg,
-:host(ak-user-settings) .pf-c-card,
-:host(ak-user-settings-flow-executor) .pf-c-card,
-:host(ak-user-settings-password) .pf-c-card,
-:host(ak-user-settings-mfa) .pf-c-card,
-:host(ak-user-settings-source) .pf-c-card {
-    position: relative;
-    overflow: hidden;
-    border-radius: 20px !important;
-    background: rgba(255, 255, 255, 0.05) !important;
-    backdrop-filter: blur(20px) saturate(130%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(130%) !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    transition: all 0.3s ease-in-out !important;
-    box-shadow:
-        0 4px 16px rgba(0, 0, 0, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+*::-webkit-scrollbar-thumb:hover {
+    background-color: var(--sb-thumb-hover);
 }
 
-.pf-c-card.pf-m-compact:hover,
-:host(ak-user-settings) .pf-c-card:hover,
-:host(ak-user-settings-flow-executor) .pf-c-card:hover,
-:host(ak-user-settings-password) .pf-c-card:hover {
-    transform: translateY(-3px) scale(1.01) !important;
-    box-shadow:
-        0 8px 32px rgba(102, 126, 234, 0.25),
-        0 4px 12px rgba(118, 75, 162, 0.2) !important;
-    border-color: rgba(102, 126, 234, 0.4) !important;
+
+/* ========================================================================== */
+/* 3. BACKGROUND (document level)                                             */
+/* ========================================================================== */
+/* Authentik 2026.x paints the flow background on body::before, but only above
+   35rem (560px) wide. We paint it on every viewport, on every non-admin page
+   (login flows, static error pages, user dashboard & settings). A fixed
+   pseudo-element avoids the iOS `background-attachment: fixed` bugs. */
+
+/* Colour on <html> only: a background on <body> would be painted ABOVE the
+   z-index:-1 body::before image. */
+html {
+    background-color: #151515 !important;
 }
 
-/* User Settings Tabs - Shadow DOM */
-:host(ak-user-settings) .pf-c-tabs,
-:host(ak-user-settings) .pf-c-tabs__list {
+body:not(:has(ak-interface-admin)) {
     background: transparent !important;
-    border-bottom-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-:host(ak-user-settings) .pf-c-tabs__button,
-:host(ak-user-settings) .pf-c-tabs__link {
-    color: rgba(255, 255, 255, 0.7) !important;
-}
-
-:host(ak-user-settings) .pf-c-tabs__link.pf-m-current,
-:host(ak-user-settings) .pf-c-tabs__item.pf-m-current .pf-c-tabs__button,
-:host(ak-user-settings) .pf-c-tabs__item.pf-m-current .pf-c-tabs__link {
-    color: white !important;
-    background: rgba(255, 255, 255, 0.1) !important;
-    border-radius: 10px 10px 0 0 !important;
-}
-
-:host(ak-user-settings) .pf-c-tabs__item.pf-m-current::after {
-    border-bottom-color: #667eea !important;
-    border-bottom-width: 3px !important;
-}
-
-/* Sidebar */
-.pf-c-page__sidebar {
-    background: rgba(19, 19, 19, 0.4) !important;
-    backdrop-filter: blur(20px) saturate(120%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(120%) !important;
-    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
-}
-
-/* Header */
-.pf-c-page__header,
-.pf-c-page__header-tools {
-    background: transparent !important;
-    border-bottom: none !important;
-    box-shadow: none !important;
-}
-
-.pf-c-page>.pf-c-page__header {
-    background: rgba(0, 0, 0, 0.4) !important;
-    backdrop-filter: blur(18px) !important;
-    -webkit-backdrop-filter: blur(18px) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-}
-
-/* IOS/Mobile Fix: .pf-c-page needs relative positioning, fixed bg moved to ::before */
-.pf-c-page {
-    /* iOS Fix: moved to pseudo-element to preventing scrolling glitch */
-    /* background-image removed from here, handled via ::before on specific pages or globally if needed */
-    position: relative !important;
-    background: transparent !important;
-    background-color: transparent !important;
-}
-
-/* Ensure inner page containers are transparent so the background shows through */
-:host(ak-library-impl) .pf-c-page,
-:host(ak-library-impl) .pf-c-page__main,
-.pf-c-page__main,
-.pf-c-page__main-section,
-.pf-c-page__drawer,
-.pf-c-drawer__content,
-.pf-c-drawer__main,
-:host(ak-library-impl) .pf-l-gallery {
-    background: transparent !important;
-    background-color: transparent !important;
-}
-
-/* Global Background: ONLY apply outside of Admin Interface */
-/* This prevents the background from leaking into the admin panel */
-/* Global Background: Applied generally, but hidden in specific contexts below */
-/* OPT-IN BACKGROUND STRATEGY */
-/* Only apply the fixed background to User Interface and Login flows */
-/* This automatically excludes the Admin Interface */
-
-/* ========================================= */
-/* === GLOBAL BACKGROUND (covers viewport) == */
-/* ========================================= */
-/* The background lives on html/body so it covers the full viewport in every
-   interface (login flow, user dashboard, user settings). Wrappers inside the
-   shadow DOM of ak-interface-user / ak-flow-executor stay transparent so the
-   body's background shows through. The admin interface has its own opaque
-   .pf-c-page background-color, so the body fond is hidden there. */
-
-html,
-body {
+body:not(:has(ak-interface-admin))::before {
+    content: "" !important;
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: -1 !important;
+    pointer-events: none !important;
     background-image: var(--ak-flow-background) !important;
     background-size: cover !important;
     background-position: center !important;
     background-repeat: no-repeat !important;
-    background-attachment: fixed !important;
-    background-color: #151515 !important;
-    min-height: 100vh !important;
 }
 
-/* User-facing interfaces must be transparent so the body's fond shows through */
-ak-interface-user,
-ak-interface-user-presentation {
-    display: block !important;
+/* Wrappers between <body> and the login card must stay transparent */
+ak-drawer,
+ak-flow-executor,
+ak-interface-user {
     background: transparent !important;
-    min-height: 100vh !important;
 }
 
-/* Login flow specifically: lock to viewport height + width with no scroll.
-   width: 100vw on the host (and on every wrapper in the chain) is critical
-   because the locale picker uses position: absolute relative to this host —
-   if the host is narrower than the viewport, the `left: 50%` centering goes
-   off-center. */
-ak-flow-executor {
-    display: block !important;
+
+/* ========================================================================== */
+/* 4. LOGIN LAYOUT (shadow root of ak-flow-executor + static pages)           */
+/* ========================================================================== */
+/* `.pf-c-login` exists in the flow executor shadow root AND, as light DOM, on
+   the static Django pages (errors, "flow not found"...). Same rules for both. */
+
+.pf-c-login {
+    /* Neutralise the opaque overlay Authentik draws on mobile / sidebar */
+    --ak-c-login--BackgroundColorOverlay: transparent !important;
+    --ak-c-login__main--BackgroundColor: transparent !important;
+    --ak-c-login__main--Color: var(--glass-text) !important;
+    --ak-c-login__footer--Color: var(--glass-text-muted) !important;
+    --ak-global--BackgroundContrastFilter: none !important;
+    --pf-c-login__main--BackgroundColor: transparent !important;
+
+    /* Card vertically centred, locale picker on top, footer at the bottom */
+    grid-template-rows:
+        [header] minmax(3.75rem, 1fr)
+        [main] auto
+        [footer] minmax(min-content, 1fr) !important;
+    padding-inline: 16px !important;
+    box-sizing: border-box !important;
     background: transparent !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
-    width: 100vw !important;
-    max-width: 100vw !important;
-    overflow: hidden !important;
-    position: relative !important;
-    left: 0 !important;
-    right: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
 }
 
-/* Kill the outer scroll on the page when a login flow is present. The form's
-   <main> is position:fixed and self-scrolling if needed. */
-body:has(ak-flow-executor),
-html:has(ak-flow-executor) {
-    overflow: hidden !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
+/* The 75dvh invisible spacer stretches the card row: not wanted with a
+   content-sized glass card. */
+.pf-c-login::after {
+    display: none !important;
 }
 
-body:has(ak-flow-executor) .pf-c-page__drawer,
-body:has(ak-flow-executor) .pf-c-drawer,
-body:has(ak-flow-executor) .pf-c-drawer__main,
-body:has(ak-flow-executor) .pf-c-drawer__content,
-body:has(ak-flow-executor) .pf-c-drawer__body {
-    height: 100vh !important;
-    max-height: 100vh !important;
-    width: 100vw !important;
-    max-width: 100vw !important;
-    overflow: hidden !important;
-    padding: 0 !important;
-    margin: 0 !important;
-}
-
-/* .pf-c-page in login flow keeps the fond (no shadow DOM constraint there) */
-.pf-c-page {
-    background: transparent !important;
+.pf-c-login::before {
     background-color: transparent !important;
+    box-shadow: none !important;
 }
 
-/* HIJACK ADMIN PANEL: opaque background hides the body fond in admin UI */
-:host(ak-interface-admin) .pf-c-page {
-    background-image: none !important;
-    background-color: var(--pf-global--BackgroundColor--100) !important;
+/* --- The glass card --- */
+.pf-c-login__main {
+    --ak-c-login__main--BoxShadow: var(--glass-card-shadow) !important;
+    --pf-c-login__main-body--PaddingLeft: clamp(20px, 6vw, 40px);
+    --pf-c-login__main-body--PaddingRight: clamp(20px, 6vw, 40px);
+    --pf-c-login__main-header--PaddingLeft: clamp(20px, 6vw, 40px);
+    --pf-c-login__main-header--PaddingRight: clamp(20px, 6vw, 40px);
+
+    align-self: center !important;
+    width: 100% !important;
+    max-width: var(--ak-c-login--MaxWidth) !important;
+    min-height: 0 !important;
+    margin: 0 auto !important;
+    padding-block-end: clamp(20px, 4vh, 32px) !important;
+    box-sizing: border-box !important;
+    isolation: isolate;
+
+    color: var(--glass-text) !important;
+    background: var(--glass-card-bg) !important;
+    -webkit-backdrop-filter: var(--glass-card-blur) !important;
+    backdrop-filter: var(--glass-card-blur) !important;
+    border: 1px solid var(--glass-card-border) !important;
+    border-radius: var(--glass-card-radius) !important;
+    box-shadow: var(--glass-card-shadow) !important;
 }
 
-/* DASHBOARD/SETTINGS TRANSPARENCY: clear all CSS vars and inner wrappers */
-:host(ak-library-impl),
-:host(ak-interface-user),
-:host(ak-interface-user-presentation) {
-    --pf-global--BackgroundColor--100: transparent !important;
+/* Placeholder before JS boots keeps a sensible height */
+.pf-c-login__main:has([slot="placeholder"]),
+.pf-c-login__main:has(slot[name="placeholder"]) {
+    min-height: min(26rem, 80dvh) !important;
+}
+
+/* --- Brand logo --- */
+.pf-c-login__main-header.pf-c-brand {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding-block-start: clamp(16px, 4vh, 36px) !important;
+    padding-block-end: clamp(4px, 1.5vh, 14px) !important;
+    background: transparent !important;
+}
+
+.pf-c-login__main-header.pf-c-brand .branding-logo,
+.pf-c-login__main-header.pf-c-brand img {
+    display: block !important;
+    width: auto !important;
+    height: auto !important;
+    max-width: min(var(--glass-logo-size), 70%) !important;
+    /* Shrinks on short viewports (landscape phones, small laptops) */
+    max-height: clamp(72px, 22dvh, var(--glass-logo-size)) !important;
+    object-fit: contain !important;
+    margin: 0 auto !important;
+}
+
+.pf-c-login__main-header.pf-c-brand .branding-logo.fas,
+.pf-c-login__main-header.pf-c-brand .branding-logo.fab,
+.pf-c-login__main-header.pf-c-brand .branding-logo.far {
+    color: var(--glass-text) !important;
+}
+
+/* Loading overlay follows the card radius */
+.pf-c-login__main ak-loading-overlay {
+    border-radius: var(--glass-card-radius) !important;
+    overflow: hidden !important;
+}
+
+/* --- Footer (brand links) --- */
+.pf-c-login__footer {
+    color: var(--glass-text-muted) !important;
+    filter: none !important;
+    background: transparent !important;
+    text-shadow: var(--glass-text-shadow);
+}
+
+.pf-c-login__footer a {
+    color: var(--glass-text-muted) !important;
+}
+
+.pf-c-login__footer a:hover {
+    color: var(--glass-text) !important;
+}
+
+/* Footer links: simple centred, wrapping row (the native 4-column grid
+   squeezes a single link onto several lines on phones) */
+:host(ak-brand-links) [part="list"] {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 6px 24px !important;
+    max-width: 100% !important;
+}
+
+:host(ak-brand-links) [part="list-item"] {
+    flex: 0 1 auto !important;
+    max-width: 100% !important;
+}
+
+/* Hide ONLY "Powered by authentik" (always the last, text-only item).
+   Your own footer links (Brand settings) stay visible. */
+:host(ak-brand-links) [part="list-item"][data-kind="text"][data-track-name="end"],
+[name="flow-links"] .pf-c-list > li:last-child:not(:has(a)) {
+    display: none !important;
+}
+
+/* --- Language picker: glass pill, centred on top, every viewport --- */
+.pf-c-login > [part="locale-select"],
+.pf-c-login > ak-locale-select {
+    --ak-c-locale-select--Opacity: 1 !important;
+    --ak-c-flow-executor__locale-select--Color: var(--glass-text) !important;
+    --ak-c-locale-select--label--Color: var(--glass-text) !important;
+    --ak-c-locale-select--Color: var(--glass-text) !important;
+    --ak-c-locale-select--BackgroundColor: transparent !important;
+
+    grid-area: header !important;
+    grid-row: header !important;
+    position: absolute !important;
+    inset-block-start: 12px !important;
+    inset-inline-start: 50% !important;
+    inset-inline-end: auto !important;
+    translate: -50% 0;
+    z-index: 100 !important;
+    filter: none !important;
+
+    color: var(--glass-text) !important;
+    background: rgba(20, 20, 30, 0.55) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+    backdrop-filter: blur(15px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 999px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
+    overflow: visible !important;
+}
+
+/* Inside <ak-locale-select> (its own shadow root) */
+:host(ak-locale-select) {
+    overflow: visible !important;
+    padding: 2px 10px 2px 6px !important;
+}
+
+:host(ak-locale-select)::after {
+    display: none !important;
+}
+
+/* Translate icon: white, and clicks go through it to the <select> */
+:host(ak-locale-select) label[part="label"] {
+    color: var(--glass-text) !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
+}
+
+:host(ak-locale-select) select[part="select"] {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: var(--glass-text) !important;
+    cursor: pointer !important;
+    padding: 4px 8px 4px 30px !important;
+    font-size: 14px !important;
+    text-decoration: none !important;
+}
+
+/* Customizable <select> (Chromium 135+): glass dropdown */
+:host(ak-locale-select) select[part="select"],
+:host(ak-locale-select) select[part="select"]::picker(select) {
+    appearance: base-select !important;
+}
+
+:host(ak-locale-select) select[part="select"]::picker(select) {
+    background: rgba(18, 20, 26, 0.6) !important;
+    -webkit-backdrop-filter: blur(22px) saturate(140%) !important;
+    backdrop-filter: blur(22px) saturate(140%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    padding: 6px !important;
+    margin-top: 6px !important;
+    width: max-content !important;
+    min-width: 220px !important;
+    max-height: min(60dvh, 420px) !important;
+    box-sizing: border-box !important;
+}
+
+:host(ak-locale-select) select[part="select"] option {
+    background: transparent !important;
+    color: var(--glass-text) !important;
+    border-radius: 10px !important;
+    padding: 8px 12px !important;
+    font-size: 14px !important;
+    white-space: nowrap !important;
+}
+
+:host(ak-locale-select) select[part="select"] option:hover {
+    background: rgba(255, 255, 255, 0.14) !important;
+}
+
+:host(ak-locale-select) select[part="select"] option:checked {
+    background: transparent !important;
+    font-weight: 600 !important;
+}
+
+/* Browsers without base-select: dark native popup */
+@supports not (appearance: base-select) {
+    :host(ak-locale-select) select option {
+        background-color: #16181d !important;
+        color: var(--glass-text) !important;
+    }
+}
+
+/* --- Sidebar layouts (Flow > Appearance > Layout = sidebar left/right) --- */
+@media (min-width: 70rem) and (min-height: 17.5rem) {
+    .pf-c-login[data-layout^="sidebar"] {
+        grid-template-rows: [header] auto [main] 1fr [footer] auto !important;
+        padding-inline: 0 !important;
+    }
+
+    .pf-c-login[data-layout^="sidebar"] .pf-c-login__main {
+        align-self: stretch !important;
+        max-width: none !important;
+        border-radius: 0 !important;
+        border-block: none !important;
+        justify-content: center !important;
+    }
+
+    .pf-c-login[data-layout^="sidebar"] > [part="locale-select"] {
+        grid-area: header !important;
+    }
+}
+
+
+/* ========================================================================== */
+/* 5. LOGIN CARD CONTENT                                                      */
+/* ========================================================================== */
+/* (a) <ak-flow-card> shadow root: title, header/body/footer wrappers.
+   (b) Stage content: lives in each ak-stage-* shadow root, slotted into
+       <ak-flow-card>, hence the `ak-flow-card ...` prefix. The three nested
+       authenticator stages that don't use ak-flow-card get :host() aliases. */
+
+/* --- (a) ak-flow-card --- */
+:host(ak-flow-card) {
+    display: block !important;
+    background: transparent !important;
+    color: var(--glass-text) !important;
+}
+
+:host(ak-flow-card) .pf-c-login__main-header,
+:host(ak-flow-card) .pf-c-login__main-body,
+:host(ak-flow-card) .pf-c-login__main-footer {
+    background: transparent !important;
+}
+
+:host(ak-flow-card) .pf-c-login__main-header {
+    padding-block: 4px 12px !important;
+    text-align: center !important;
+}
+
+:host(ak-flow-card) .pf-c-title {
+    color: var(--glass-text) !important;
+    text-shadow: var(--glass-text-shadow) !important;
+    font-size: clamp(1.35rem, 1.1rem + 1vw, 1.75rem) !important;
+    font-weight: 600 !important;
+    line-height: 1.25 !important;
+    text-align: center !important;
+}
+
+:host(ak-flow-card) .pf-c-login__main-footer {
+    margin-block-end: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* --- (b) stage content: text --- */
+ak-flow-card p,
+ak-flow-card label,
+ak-flow-card legend,
+ak-flow-card h1,
+ak-flow-card h2,
+ak-flow-card h3,
+ak-flow-card .pf-c-title,
+ak-flow-card .pf-c-form__label,
+ak-flow-card .pf-c-form__label-text,
+:host(ak-stage-authenticator-validate-code) p,
+:host(ak-stage-authenticator-validate-code) label,
+:host(ak-stage-authenticator-validate-code) .pf-c-form__label-text,
+:host(ak-stage-authenticator-validate-duo) p,
+:host(ak-stage-authenticator-validate-webauthn) p,
+:host(ak-flow-input-password) label,
+:host(ak-flow-input-password) .pf-c-form__label-text {
+    color: var(--glass-text) !important;
+    text-shadow: var(--glass-text-shadow) !important;
+}
+
+ak-flow-card .pf-c-form__helper-text,
+:host(ak-stage-authenticator-validate-code) .pf-c-form__helper-text,
+:host(ak-flow-input-password) .pf-c-form__helper-text {
+    color: var(--glass-text-muted) !important;
+    font-size: 13px !important;
+}
+
+ak-flow-card .pf-c-form__helper-text.pf-m-error,
+ak-flow-card .pf-m-error,
+:host(ak-stage-authenticator-validate-code) .pf-m-error,
+:host(ak-flow-input-password) .pf-c-form__helper-text.pf-m-error {
+    color: #ff8a8a !important;
+}
+
+ak-flow-card a:not(.pf-c-button),
+:host(ak-form-static) a {
+    color: var(--glass-text) !important;
+    text-decoration: none !important;
+    opacity: 0.85;
+    transition: opacity 0.2s ease, text-shadow 0.2s ease !important;
+}
+
+ak-flow-card a:not(.pf-c-button):hover,
+:host(ak-form-static) a:hover {
+    opacity: 1;
+    text-decoration: underline !important;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.5) !important;
+}
+
+ak-flow-card ak-divider {
+    color: var(--glass-text-muted) !important;
+}
+
+/* --- (b) stage content: inputs --- */
+ak-flow-card .pf-c-form-control,
+ak-flow-card input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+ak-flow-card select,
+ak-flow-card textarea,
+:host(ak-stage-authenticator-validate-code) .pf-c-form-control,
+:host(ak-flow-input-password) .pf-c-form-control {
+    background-color: var(--glass-control-bg) !important;
+    border: 1.5px solid var(--glass-control-border) !important;
+    border-radius: var(--glass-radius) !important;
+    padding: 10px 15px !important;
+    min-height: 44px !important;
+    height: auto !important;
+    font-size: 16px !important; /* >= 16px: no auto-zoom on iOS */
+    color: var(--glass-text) !important;
+    box-sizing: border-box !important;
+    -webkit-backdrop-filter: blur(20px) saturate(130%) !important;
+    backdrop-filter: blur(20px) saturate(130%) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    transition: border-color 0.25s ease, background-color 0.25s ease !important;
+}
+
+ak-flow-card .pf-c-form-control:focus,
+ak-flow-card input:not([type="checkbox"]):not([type="radio"]):focus,
+ak-flow-card select:focus,
+ak-flow-card textarea:focus,
+:host(ak-stage-authenticator-validate-code) .pf-c-form-control:focus,
+:host(ak-flow-input-password) .pf-c-form-control:focus {
+    background-color: var(--glass-control-bg-focus) !important;
+    border-color: var(--glass-focus) !important;
+    outline: none !important;
+}
+
+ak-flow-card .pf-c-form-control::placeholder,
+:host(ak-flow-input-password) .pf-c-form-control::placeholder {
+    color: rgba(255, 255, 255, 0.45) !important;
+}
+
+/* Chrome autofill: keep the glass look instead of the yellow/blue fill */
+ak-flow-card input:-webkit-autofill,
+:host(ak-flow-input-password) input:-webkit-autofill {
+    -webkit-text-fill-color: var(--glass-text) !important;
+    -webkit-box-shadow: 0 0 0 1000px rgba(30, 34, 48, 0.92) inset !important;
+    caret-color: var(--glass-text) !important;
+}
+
+ak-flow-card select option {
+    background-color: #1f1f1f !important;
+    color: var(--glass-text) !important;
+}
+
+/* Password field + "show password" eye inside the input */
+:host(ak-flow-input-password) {
+    display: block !important;
+    width: 100% !important;
+}
+
+:host(ak-flow-input-password) .pf-c-input-group {
+    position: relative !important;
+    display: flex !important;
+    width: 100% !important;
+}
+
+:host(ak-flow-input-password) .pf-c-form-control {
+    padding-right: 46px !important;
+}
+
+:host(ak-flow-input-password) .pf-c-button.pf-m-control {
+    position: absolute !important;
+    top: 50% !important;
+    right: 6px !important;
+    transform: translateY(-50%) !important;
+    z-index: 2 !important;
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: var(--glass-text-muted) !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 50% !important;
+    box-shadow: none !important;
+}
+
+:host(ak-flow-input-password) .pf-c-button.pf-m-control:hover {
+    color: var(--glass-text) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+:host(ak-flow-input-password) .pf-c-button.pf-m-control::after,
+:host(ak-flow-input-password) .pf-c-button.pf-m-control::before {
+    display: none !important;
+}
+
+/* --- (b) stage content: "Remember me" switch rendered as a glass checkbox --- */
+ak-flow-card .pf-c-switch,
+ak-flow-card .pf-c-check {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin: 14px 0 4px !important;
+    cursor: pointer !important;
+}
+
+ak-flow-card .pf-c-switch__input,
+ak-flow-card .pf-c-check__input,
+ak-flow-card input[type="checkbox"] {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    position: relative !important;
+    flex: 0 0 auto !important;
+    width: 18px !important;
+    height: 18px !important;
+    margin: 0 !important;
+    opacity: 1 !important;
+    clip: auto !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 2px solid rgba(255, 255, 255, 0.35) !important;
+    border-radius: 5px !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15) !important;
+    cursor: pointer !important;
+    transition: background 0.2s ease, border-color 0.2s ease !important;
+}
+
+ak-flow-card .pf-c-switch__input:checked,
+ak-flow-card .pf-c-check__input:checked,
+ak-flow-card input[type="checkbox"]:checked {
+    background: rgba(102, 126, 234, 0.75) !important;
+    border-color: rgba(102, 126, 234, 0.9) !important;
+}
+
+ak-flow-card .pf-c-switch__input:checked::after,
+ak-flow-card .pf-c-check__input:checked::after,
+ak-flow-card input[type="checkbox"]:checked::after {
+    content: "\2713" !important;
+    position: absolute !important;
+    inset: 0 !important;
+    display: grid !important;
+    place-items: center !important;
+    color: #fff !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+}
+
+ak-flow-card .pf-c-switch__toggle {
+    display: none !important;
+}
+
+ak-flow-card .pf-c-switch .pf-c-form__label,
+ak-flow-card .pf-c-switch__label,
+ak-flow-card .pf-c-check__label {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-size: 14px !important;
+    font-weight: 400 !important;
+}
+
+/* --- (b) stage content: buttons --- */
+ak-flow-card .pf-c-button,
+:host(ak-stage-authenticator-validate-code) .pf-c-button,
+:host(ak-stage-authenticator-validate-duo) .pf-c-button,
+:host(ak-stage-authenticator-validate-webauthn) .pf-c-button {
+    border-radius: var(--glass-radius) !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    line-height: 1.35 !important;
+    text-transform: none !important;
+}
+
+ak-flow-card .pf-c-button::after,
+:host(ak-stage-authenticator-validate-code) .pf-c-button::after,
+:host(ak-stage-authenticator-validate-duo) .pf-c-button::after,
+:host(ak-stage-authenticator-validate-webauthn) .pf-c-button::after {
+    display: none !important;
+}
+
+/* Primary: white glass with a light sweep on hover */
+ak-flow-card .pf-c-button.pf-m-primary,
+:host(ak-stage-authenticator-validate-code) .pf-c-button.pf-m-primary,
+:host(ak-stage-authenticator-validate-duo) .pf-c-button.pf-m-primary,
+:host(ak-stage-authenticator-validate-webauthn) .pf-c-button.pf-m-primary {
+    position: relative !important;
+    overflow: hidden !important;
+    min-height: 46px !important;
+    padding: 12px 24px !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    color: var(--glass-text) !important;
+    background: var(--glass-btn-bg) !important;
+    border: 1px solid var(--glass-btn-border) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    backdrop-filter: blur(10px) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease !important;
+}
+
+ak-flow-card .pf-c-button.pf-m-primary::before,
+:host(ak-stage-authenticator-validate-code) .pf-c-button.pf-m-primary::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 -100%;
+    width: 100%;
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.2) 50%, transparent 100%);
+    transition: left 0.6s ease;
+    pointer-events: none;
+}
+
+ak-flow-card .pf-c-button.pf-m-primary:hover::before,
+:host(ak-stage-authenticator-validate-code) .pf-c-button.pf-m-primary:hover::before {
+    left: 100%;
+}
+
+ak-flow-card .pf-c-button.pf-m-primary:hover,
+:host(ak-stage-authenticator-validate-code) .pf-c-button.pf-m-primary:hover,
+:host(ak-stage-authenticator-validate-duo) .pf-c-button.pf-m-primary:hover,
+:host(ak-stage-authenticator-validate-webauthn) .pf-c-button.pf-m-primary:hover {
+    background: var(--glass-btn-bg-hover) !important;
+    border-color: rgba(255, 255, 255, 0.45) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+}
+
+/* Secondary / link-style buttons ("Use a security key", "Back", ...) */
+ak-flow-card .pf-c-button.pf-m-secondary,
+ak-flow-card .pf-c-button.pf-m-tertiary,
+:host(ak-stage-authenticator-validate-code) .pf-c-button.pf-m-secondary,
+:host(ak-stage-authenticator-validate-duo) .pf-c-button.pf-m-secondary,
+:host(ak-stage-authenticator-validate-webauthn) .pf-c-button.pf-m-secondary {
+    min-height: 44px !important;
+    padding: 10px 20px !important;
+    font-weight: 500 !important;
+    color: var(--glass-text) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid var(--glass-control-border) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    backdrop-filter: blur(10px) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+    transition: background 0.3s ease, transform 0.3s ease, border-color 0.3s ease !important;
+}
+
+ak-flow-card .pf-c-button.pf-m-secondary:hover,
+ak-flow-card .pf-c-button.pf-m-tertiary:hover,
+:host(ak-stage-authenticator-validate-code) .pf-c-button.pf-m-secondary:hover,
+:host(ak-stage-authenticator-validate-duo) .pf-c-button.pf-m-secondary:hover,
+:host(ak-stage-authenticator-validate-webauthn) .pf-c-button.pf-m-secondary:hover {
+    background: rgba(255, 255, 255, 0.16) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    transform: translateY(-2px) !important;
+}
+
+ak-flow-card .pf-c-button.pf-m-link,
+ak-flow-card .pf-c-button.pf-m-plain {
+    color: var(--glass-text-muted) !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+ak-flow-card .pf-c-button.pf-m-link:hover,
+ak-flow-card .pf-c-button.pf-m-plain:hover {
+    color: var(--glass-text) !important;
+}
+
+ak-flow-card .pf-c-button.pf-m-danger {
+    color: var(--glass-text) !important;
+    background: var(--glass-danger-bg) !important;
+    border: 1px solid var(--glass-danger-border) !important;
+}
+
+ak-flow-card .pf-c-button.pf-m-block {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+}
+
+ak-flow-card .pf-c-button:focus-visible,
+:host(ak-flow-input-password) .pf-c-button:focus-visible {
+    outline: 2px solid var(--glass-focus) !important;
+    outline-offset: 2px !important;
+}
+
+ak-flow-card .pf-c-form__group.pf-m-action,
+ak-flow-card .pf-c-form__actions {
+    margin-top: 8px !important;
+}
+
+/* "Stay signed in?" -> Yes / No side by side, "No" with a red tint */
+:host(ak-stage-user-login) fieldset.pf-m-action {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+:host(ak-stage-user-login) fieldset.pf-m-action .pf-c-button {
+    flex: 1 1 120px !important;
+    margin: 0 !important;
+}
+
+:host(ak-stage-user-login) .pf-c-button.pf-m-secondary {
+    background: var(--glass-danger-bg) !important;
+    border-color: var(--glass-danger-border) !important;
+}
+
+:host(ak-stage-user-login) .pf-c-button.pf-m-secondary:hover {
+    background: rgba(220, 53, 69, 0.3) !important;
+    border-color: rgba(220, 53, 69, 0.6) !important;
+}
+
+/* --- (b) Social / external sources (2026.x <fieldset name=login-sources>) --- */
+ak-flow-card fieldset[name="login-sources"] {
+    display: flex !important;
+    flex-flow: row wrap !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    padding-inline: var(--pf-c-login__main-body--PaddingLeft, 24px) !important;
+    padding-block-start: 4px !important;
+    border: none !important;
+    margin: 0 !important;
+}
+
+/* "— Continuer avec —" separator */
+ak-flow-card fieldset[name="login-sources"]::before {
+    content: var(--ak-social-separator-text);
+    flex: 1 1 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+    color: var(--glass-text-muted);
+    font-size: 14px;
+    white-space: nowrap;
+    background:
+        linear-gradient(rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.35)) left center / calc(50% - 5.5em) 1px no-repeat,
+        linear-gradient(rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.35)) right center / calc(50% - 5.5em) 1px no-repeat;
+    justify-content: center;
+}
+
+ak-flow-card .source-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    flex: 1 1 calc(50% - 10px) !important;
+    min-width: min(9rem, 100%) !important;
+    min-height: 44px !important;
+    padding: 10px 16px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: var(--glass-text) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    border-radius: 12px !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    backdrop-filter: blur(10px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    transition: background 0.3s ease, transform 0.3s ease, border-color 0.3s ease !important;
+}
+
+ak-flow-card .source-button:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-color: rgba(255, 255, 255, 0.45) !important;
+    transform: translateY(-2px) !important;
+}
+
+ak-flow-card .source-button.source-button-promoted {
+    flex: 1 1 100% !important;
+}
+
+ak-flow-card .source-button .pf-c-button__icon,
+ak-flow-card .source-button .pf-c-button__icon img {
+    width: 20px !important;
+    height: 20px !important;
+    margin: 0 !important;
+    object-fit: contain !important;
+}
+
+/* Single-colour brand icons (Discord, GitHub...) turned white */
+ak-flow-card .source-button[name*="discord"] img,
+ak-flow-card .source-button[name*="github"] img,
+ak-flow-card .source-button[name*="apple"] img {
+    filter: brightness(0) invert(1) !important;
+}
+
+/* --- (b) Footer band: "Need an account?" / "Forgot password?" --- */
+ak-flow-card .pf-c-login__main-footer-band {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin: 8px var(--pf-c-login__main-body--PaddingLeft, 24px) 0 !important;
+    padding: 12px 0 0 !important;
+    background: transparent !important;
+    border: none !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: var(--glass-text-muted) !important;
+    font-size: 14px !important;
+    text-align: center !important;
+}
+
+/* --- Avatar + username block (password / MFA stages) --- */
+:host(ak-form-static) {
+    margin-bottom: 12px !important;
+}
+
+:host(ak-form-static) .primary-content,
+:host(ak-form-static) .username {
+    color: var(--glass-text) !important;
+    text-shadow: var(--glass-text-shadow) !important;
+}
+
+:host(ak-form-static) .pf-c-avatar {
+    border: 2px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 50% !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* --- MFA method picker (authenticator validate) --- */
+ak-flow-card .authenticator-button {
+    color: var(--glass-text) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: var(--glass-radius) !important;
+    margin-bottom: 8px !important;
+    transition: background 0.2s ease, border-color 0.2s ease !important;
+}
+
+ak-flow-card .authenticator-button:hover {
+    background: rgba(255, 255, 255, 0.14) !important;
+    border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+ak-flow-card fieldset[name="device-challenges"],
+ak-flow-card fieldset[name="stages"] {
+    --ak-c-fieldset--BorderColor: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    border-radius: var(--glass-radius) !important;
+}
+
+/* WebAuthn / code "in progress" empty state centred */
+:host(ak-stage-authenticator-validate-webauthn) ak-empty-state,
+:host(ak-stage-authenticator-validate-code) ak-empty-state {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    width: 100% !important;
+    margin: 16px auto !important;
+}
+
+/* --- TOTP enrolment: white QR tile + copy button --- */
+:host(ak-stage-authenticator-totp) .qr-container {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin: 10px 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+:host(ak-stage-authenticator-totp) qr-code {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: min(170px, 60vw) !important;
+    height: min(170px, 60vw) !important;
+    margin: 0 0 15px !important;
+    padding: 8px !important;
+    box-sizing: border-box !important;
+    background: #fff !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+:host(ak-stage-authenticator-totp) qr-code svg {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+:host(ak-stage-authenticator-totp) .pf-c-form__group p,
+:host(ak-stage-authenticator-totp) .pf-c-form__group li {
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+}
+
+/* --- Consent stage permission list --- */
+:host(ak-stage-consent) .pf-c-list,
+:host(ak-stage-consent) li {
+    color: var(--glass-text) !important;
+}
+
+/* --- Loading states --- */
+:host(ak-empty-state) .pf-c-empty-state,
+:host(ak-empty-state) .pf-c-empty-state__content,
+:host(ak-empty-state) .pf-c-empty-state__body {
+    background: transparent !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    text-align: center !important;
+}
+
+:host(ak-empty-state) .pf-c-title,
+:host(ak-empty-state) h1 {
+    color: var(--glass-text) !important;
+    text-shadow: var(--glass-text-shadow) !important;
+}
+
+:host(ak-empty-state) .pf-c-empty-state__icon,
+:host(ak-empty-state) i.pf-icon {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+:host(ak-spinner) .pf-c-spinner {
+    --pf-c-spinner--Color: rgba(255, 255, 255, 0.85) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+:host(ak-loading-overlay) {
+    background: rgba(15, 20, 35, 0.35) !important;
+    border-radius: var(--glass-card-radius) !important;
+}
+
+
+/* ========================================================================== */
+/* 6. STATIC PAGES (no web components: errors, "flow not found"...)           */
+/* ========================================================================== */
+
+body:not(:has(ak-flow-executor)) .pf-c-login .pf-c-title {
+    color: var(--glass-text) !important;
+    text-align: center !important;
+    text-shadow: var(--glass-text-shadow) !important;
+    font-size: clamp(1.35rem, 1.1rem + 1vw, 1.75rem) !important;
+    font-weight: 600 !important;
+}
+
+body:not(:has(ak-flow-executor)) .pf-c-login__main-body,
+body:not(:has(ak-flow-executor)) .pf-c-login__main-body p {
+    color: rgba(255, 255, 255, 0.88) !important;
+    text-align: center !important;
+    line-height: 1.5 !important;
+}
+
+body:not(:has(ak-flow-executor)) .pf-c-login a.pf-c-button.pf-m-primary,
+body:not(:has(ak-flow-executor)) .pf-c-login .pf-c-button.pf-m-primary {
+    display: inline-block !important;
+    padding: 12px 24px !important;
+    color: var(--glass-text) !important;
+    background: var(--glass-btn-bg) !important;
+    border: 1px solid var(--glass-btn-border) !important;
+    border-radius: var(--glass-radius) !important;
+    text-decoration: none !important;
+    font-weight: 600 !important;
+}
+
+body:not(:has(ak-flow-executor)) .pf-c-login a.pf-c-button.pf-m-primary:hover,
+body:not(:has(ak-flow-executor)) .pf-c-login .pf-c-button.pf-m-primary:hover {
+    background: var(--glass-btn-bg-hover) !important;
+}
+
+
+/* ========================================================================== */
+/* 7. USER INTERFACE (dashboard / library / settings)                         */
+/* ========================================================================== */
+
+/* Authentik's grey "slant" background sits on top of ours: remove it */
+ak-interface-user::part(background-wrapper),
+ak-interface-user::part(background-default-slant),
+:host(ak-interface-user) [part="background-wrapper"],
+:host(ak-interface-user) [part="background-default-slant"] {
+    display: none !important;
+}
+
+ak-interface-user::part(page),
+:host(ak-interface-user) .pf-c-page {
     --pf-c-page--BackgroundColor: transparent !important;
     --pf-c-page__main-section--BackgroundColor: transparent !important;
-    --pf-c-drawer--BackgroundColor: transparent !important;
+    --pf-c-drawer__content--BackgroundColor: transparent !important;
+    background: transparent !important;
 }
 
-:host(ak-library-impl) .pf-c-page,
-:host(ak-library-impl) .pf-c-page__main,
-:host(ak-library-impl) .pf-c-page__main-section,
-:host(ak-library-impl) .pf-c-drawer__content,
-:host(ak-library-impl) .pf-c-drawer__main,
-:host(ak-interface-user) .pf-c-page,
+/* Glass top bar */
+ak-interface-user::part(page__header),
+:host(ak-interface-user) .pf-c-page__header {
+    background: rgba(0, 0, 0, 0.4) !important;
+    -webkit-backdrop-filter: blur(18px) !important;
+    backdrop-filter: blur(18px) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: none !important;
+}
+
+ak-interface-user::part(brand) {
+    display: flex !important;
+    align-items: center !important;
+}
+
+:host(ak-interface-user) img.pf-c-brand {
+    max-height: 60px !important;
+    max-width: 200px !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+}
+
 :host(ak-interface-user) .pf-c-page__main,
 :host(ak-interface-user) .pf-c-page__drawer,
 :host(ak-interface-user) .pf-c-drawer,
@@ -1308,433 +1283,54 @@ body:has(ak-flow-executor) .pf-c-drawer__body {
 :host(ak-interface-user) .pf-c-drawer__content,
 :host(ak-interface-user) .pf-c-drawer__body,
 :host(ak-interface-user) .pf-c-page__main-section,
-:host(ak-interface-user) .pf-l-stack,
-:host(ak-interface-user) .pf-l-stack__item,
-:host(ak-interface-user-presentation) .pf-c-page,
-:host(ak-interface-user-presentation) .pf-c-page__main {
+:host(ak-library-impl) .pf-c-page__main,
+:host(ak-library-impl) .pf-c-page__main-section,
+:host(ak-library-impl) .pf-l-gallery,
+:host(ak-library-impl) [part="card-wrapper"] {
     background: transparent !important;
     background-color: transparent !important;
 }
 
-/* === CSS SHADOW PARTS (light DOM → shadow DOM via ::part()) ===
-   Authentik 2026.x doesn't propagate the Brand Custom CSS into the shadow root
-   of <ak-interface-user> the way it does for flow components, so :host(...)
-   rules above never reach .pf-c-page inside the user dashboard. The exposed
-   `part="..."` attributes let us style those elements from the light DOM. */
-
-ak-interface-user::part(page),
-ak-interface-user::part(page__header),
-ak-interface-user-presentation::part(page),
-ak-interface-user-presentation::part(page__header) {
-    background: transparent !important;
-    background-color: transparent !important;
+:host(ak-library-impl),
+:host(ak-interface-user) {
+    --pf-c-page__main-section--BackgroundColor: transparent !important;
+    --pf-c-drawer--BackgroundColor: transparent !important;
 }
 
-/* Hide the 2026.x decorative slant — it draws a partial-width image that
-   conflicts with our full-viewport background and creates "image with black
-   bands on the sides" effect. */
-ak-interface-user::part(background-wrapper),
-ak-interface-user::part(background-default-slant),
-ak-interface-user-presentation::part(background-wrapper),
-ak-interface-user-presentation::part(background-default-slant) {
-    display: none !important;
-}
-
-/* === LOGIN FLOW GLASSMORPHISM — multi-strategy ===
-   Authentik 2026.x injects the Brand Custom CSS *inside* the shadow root of
-   <ak-flow-executor> rather than at the document level. That means:
-   - `ak-flow-executor::part(main)` (document level) DOES NOT MATCH because the
-     stylesheet lives inside the shadow root where `ak-flow-executor` is the
-     :host, not a descendant.
-   - `:host(ak-flow-executor) .pf-c-login__main` matches inside the shadow root.
-   We write both so it works whichever way the CSS is injected. */
-
-/* (Login-flow CSS variables for shadow-piercing are consolidated in the
-   "PATTERNFLY CSS VARS (shadow-piercing)" block further below — see the
-   --pf-c-login__main--* vars there.) */
-
-/* (a) Match if CSS is injected at document level — CONFIRMED working by user test:
-   `getComputedStyle(...shadowRoot.querySelector('main[part="main"]')).background`
-   returns our rgba value. ::part() at document level is the ONLY reliable route. */
-ak-flow-executor::part(main) {
-    /* Strong glass — 0.05 was invisible. Use darker tint with high blur. */
-    background: rgba(15, 20, 35, 0.55) !important;
-    background-color: rgba(15, 20, 35, 0.55) !important;
-    backdrop-filter: blur(40px) saturate(160%) !important;
-    -webkit-backdrop-filter: blur(40px) saturate(160%) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    border-radius: 24px !important;
-    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
-    padding: 32px 28px !important;
-    width: 90% !important;
-    /* Wider so long button labels like "Sélectionnez une autre méthode
-       d'authentification" fit without forcing horizontal overflow. */
-    max-width: 600px !important;
-    min-width: 0 !important;
-    /* Center on viewport via position:fixed + translate. */
-    position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    margin: 0 !important;
-    max-height: 90vh !important;
-    /* `overflow-x: clip` absolutely forbids horizontal scrollbar. */
-    overflow-x: clip !important;
-    overflow-y: auto !important;
-    overflow-clip-margin: 0 !important;
-    z-index: 10 !important;
-    /* Keep labels left-aligned (UX standard). Centering specific elements
-       (buttons, empty-state, brand logo) is done below via CSS variables
-       and per-element rules — NOT a blanket text-align: center on the main. */
-    box-sizing: border-box !important;
-}
-
-ak-flow-executor::part(footer) {
-    background: transparent !important;
-}
-
-/* Center the Palo Alto brand logo inside the main box (was left-aligned by
-   default Authentik style). The <div part="branding"> is exposed directly
-   as a sub-part of the flow executor's shadow root. */
-ak-flow-executor::part(branding) {
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    margin-bottom: 16px !important;
-}
-
-/* (b) Match if CSS is injected INSIDE the shadow root of ak-flow-executor.
-   Inside the shadow root, the host element is matched by :host (or :host(...)).
-   The <main class="pf-c-login__main" part="main"> is a descendant of :host. */
-:host(ak-flow-executor) .pf-c-login__main,
-:host(.pf-c-login) .pf-c-login__main,
-:host(ak-flow-executor) main[part="main"],
-:host(.pf-c-login) main[part="main"] {
-    background: rgba(255, 255, 255, 0.05) !important;
-    background-color: rgba(255, 255, 255, 0.05) !important;
-    backdrop-filter: blur(30px) saturate(140%) !important;
-    -webkit-backdrop-filter: blur(30px) saturate(140%) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-radius: 24px !important;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
-    padding: 32px 28px !important;
-    max-width: 480px !important;
-    margin: 0 auto !important;
-}
-
-/* (c) Center the shadow content vertically to reduce excessive scroll.
-   This rule, when injected into the shadow root, makes the shadow root host
-   layout its children with flex-column centered. */
-:host(ak-flow-executor),
-:host(.pf-c-login) {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    min-height: 100vh !important;
-    width: 100% !important;
-    padding: 20px 0 !important;
-    box-sizing: border-box !important;
-    position: relative !important;
-}
-
-/* === <ak-flow-card> transparency (host of every login stage in 2026.x) === */
-ak-flow-card,
-:host(ak-flow-card) {
-    background: transparent !important;
-    background-color: transparent !important;
-    display: block !important;
-}
-
-:host(ak-flow-card) .pf-c-login__main-header,
-:host(ak-flow-card) .pf-c-login__main-body {
-    background: transparent !important;
-    background-color: transparent !important;
-}
-
-/* === <ak-locale-select> — position absolute top-left + fix label/select overlap ===
-   Like above, multi-strategy: ::part() at document level AND descendant selectors
-   inside the shadow root via :host(). */
-
-/* === Locale select — CENTERED HORIZONTALLY ON ALL VIEWPORTS ===
-   Uses `left: 50vw` (viewport units) instead of `left: 50%`, so it stays
-   centered on the viewport regardless of which ancestor's containing block
-   gets used. `transform: translateX(-50%)` then shifts it left by half its
-   own width to truly center it.
-
-   Always at top: 14px from viewport top. Same behavior desktop + mobile so
-   it never goes off-screen or overlaps the login box. */
-ak-locale-select,
-ak-flow-executor::part(locale-select) {
-    position: absolute !important;
-    top: 14px !important;
-    left: 50vw !important;
-    right: auto !important;
-    bottom: auto !important;
-    transform: translateX(-50%) !important;
-    z-index: 1000 !important;
-    display: inline-flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    gap: 8px !important;
-    width: auto !important;
-    max-width: 280px !important;
-    min-width: 180px !important;
-    padding: 5px 12px !important;
-    background-color: rgba(20, 20, 30, 0.7) !important;
-    backdrop-filter: blur(15px) !important;
-    -webkit-backdrop-filter: blur(15px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    border-radius: 10px !important;
-}
-
-/* (b) Inside shadow root of ak-flow-executor */
-:host(ak-flow-executor) ak-locale-select,
-:host(.pf-c-login) ak-locale-select {
-    position: absolute !important;
-    top: 14px !important;
-    left: 14px !important;
-    z-index: 100 !important;
-    display: inline-flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    gap: 8px !important;
-    width: auto !important;
-    max-width: 200px !important;
-}
-
-ak-flow-executor::part(locale-select-label) {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    flex-shrink: 0 !important;
-    width: 18px !important;
-    height: 18px !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    color: rgba(255, 255, 255, 0.7) !important;
-    fill: rgba(255, 255, 255, 0.7) !important;
-}
-
-ak-flow-executor::part(locale-select-select) {
-    flex: 0 1 auto !important;
-    width: auto !important;
-    max-width: 200px !important;
-    min-width: 130px !important;
-    background-color: rgba(255, 255, 255, 0.08) !important;
-    color: white !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-radius: 6px !important;
-    padding: 2px 8px !important;
-    font-size: 13px !important;
-    line-height: 1.4 !important;
-    height: auto !important;
-}
-
-/* Fallback for the case where Authentik DOES inject CSS into ak-locale-select's
-   shadow root. Use 50vw centering (same as document-level rule above) to keep
-   behavior consistent if both rules end up applying. */
-:host(ak-locale-select) {
-    position: absolute !important;
-    top: 14px !important;
-    left: 50vw !important;
-    transform: translateX(-50%) !important;
-    z-index: 1000 !important;
-    display: inline-flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    gap: 8px !important;
-    width: auto !important;
-    max-width: 280px !important;
-    min-width: 180px !important;
-    color: rgba(255, 255, 255, 0.85) !important;
-}
-
-:host(ak-locale-select) label {
-    display: inline-flex !important;
-    align-items: center !important;
-    flex-shrink: 0 !important;
-    width: auto !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-:host(ak-locale-select) svg.icon {
-    width: 16px !important;
-    height: 16px !important;
-    fill: rgba(255, 255, 255, 0.7) !important;
-}
-
-:host(ak-locale-select) select,
-:host(ak-locale-select) [part="select"] {
-    width: auto !important;
-    max-width: 140px !important;
-    min-width: 80px !important;
-    background-color: rgba(255, 255, 255, 0.08) !important;
-    color: white !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-radius: 8px !important;
-    padding: 4px 8px !important;
-    font-size: 13px !important;
-}
-
-:host(ak-locale-select) select option {
-    background-color: #1f1f1f !important;
-    color: white !important;
-}
-
-
-/* ========================================= */
-/* === FORM INPUTS & PASSWORD TOGGLE FIX === */
-/* ========================================= */
-
-/* Fix Input Group Position to allow absolute button */
-.pf-c-input-group {
-    position: relative !important;
-    display: flex !important;
-    width: 100% !important;
-}
-
-/* Position the "Show Password" button inside the input */
-.pf-c-button.pf-m-control {
-    position: absolute !important;
-    top: 50% !important;
-    right: 5px !important;
-    transform: translateY(-50%) !important;
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    /* Very high z-index to stay above focused inputs */
-    z-index: 9999 !important;
-    padding: 5px !important;
-    margin: 0 !important;
-    height: auto !important;
-    min-width: 0 !important;
-    width: 30px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    cursor: pointer !important;
-    pointer-events: auto !important;
-}
-
-/* Hover effect */
-.pf-c-button.pf-m-control:hover {
-    background: rgba(255, 255, 255, 0.1) !important;
-    border-radius: 50% !important;
-}
-
-/* Remove borders */
-.pf-c-button.pf-m-control::after,
-.pf-c-button.pf-m-control::before {
-    display: none !important;
-    content: none !important;
-}
-
-/* Ensure input has space */
-.pf-c-form-control {
-    padding-right: 40px !important;
-}
-
-/* ===== ADMIN INTERFACE PRESERVATION ===== */
-/* Reset sensitive admin elements to avoid breaking them */
-
-[data-ak-interface-root="ak-interface-admin"] .pf-c-button.pf-m-plain,
-[data-ak-interface-root="ak-interface-admin"] .pf-c-button.pf-m-secondary,
-[data-ak-interface-root="ak-interface-admin"] .pf-c-button.pf-m-primary {
-    width: auto !important;
-    min-width: 0 !important;
-    height: auto !important;
-    transform: none !important;
-    background: var(--pf-c-button--m-plain--BackgroundColor, transparent) !important;
-    border: none !important;
-    box-shadow: none !important;
-    color: var(--pf-c-button--m-plain--Color, inherit) !important;
-}
-
-[data-ak-interface-root="ak-interface-admin"] .pf-c-select__toggle,
-[data-ak-interface-root="ak-interface-admin"] .pf-c-form-control {
-    height: auto !important;
-    min-height: 0 !important;
-    padding: initial !important;
-    background: var(--pf-c-form-control--BackgroundColor, #fff) !important;
-    border: 1px solid var(--pf-c-form-control--BorderColor, #ccc) !important;
-    border-radius: var(--pf-c-form-control--BorderRadius, 3px) !important;
-    backdrop-filter: none !important;
-    box-shadow: none !important;
-    color: var(--pf-c-form-control--Color, initial) !important;
-}
-
-/* ===== ADMIN BUTTON STYLING ===== */
-
-/* Admin button is slotted via <slot name="extra"> in <ak-nav-buttons>, so it lives
-   in the light DOM of <ak-interface-user> directly — NOT inside .pf-c-page__header-tools-item. */
-:host(ak-interface-user) a[href*="/if/admin/"],
-:host(ak-interface-user-presentation) a[href*="/if/admin/"] {
-    border-radius: 50px !important;
-    border: none !important;
+/* "Admin interface" pill in the header */
+:host(ak-interface-user) a[href*="/if/admin/"] {
+    color: var(--glass-text) !important;
     background: rgba(255, 255, 255, 0.15) !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
-    color: white !important;
+    border: none !important;
+    border-radius: 50px !important;
     padding: 8px 24px !important;
-    transition: all 0.3s ease !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    backdrop-filter: blur(10px) !important;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
     text-transform: none !important;
     font-weight: 500 !important;
+    transition: background 0.3s ease, transform 0.3s ease !important;
 }
 
-/* Button 'Yes' / Primary */
-:host(ak-stage-identification) .pf-c-button.pf-m-primary {
-    background: rgba(40, 167, 69, 0.25) !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
-    border: 1.5px solid rgba(40, 167, 69, 0.4) !important;
-    color: white !important;
-    font-weight: 600 !important;
-    padding: 10px 24px !important;
-    border-radius: 14px !important;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
-    box-shadow:
-        0 4px 15px rgba(40, 167, 69, 0.15),
-        0 2px 8px rgba(0, 0, 0, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
-    position: relative !important;
-    overflow: hidden !important;
-    margin-top: 4px !important;
-    /* Fix for hover clipping */
-    margin-bottom: 4px !important;
-}
-
-:host(ak-interface-user) a[href*="/if/admin/"]:hover,
-:host(ak-interface-user-presentation) a[href*="/if/admin/"]:hover {
+:host(ak-interface-user) a[href*="/if/admin/"]:hover {
     background: rgba(255, 255, 255, 0.25) !important;
     transform: translateY(-2px) !important;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
-    color: white !important;
     text-decoration: none !important;
 }
 
-:host(ak-interface-user) a[href*="/if/admin/"]::after,
-:host(ak-interface-user-presentation) a[href*="/if/admin/"]::after {
-    border: none !important;
+:host(ak-interface-user) a[href*="/if/admin/"]::after {
     display: none !important;
-    content: none !important;
 }
 
-:host(ak-interface-user) a[href*="/if/admin/"]:focus,
-:host(ak-interface-user-presentation) a[href*="/if/admin/"]:focus {
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
-}
-
-/* ===== DASHBOARD CARDS ===== */
-
-:host(ak-library-impl) .pf-c-card.pf-m-hoverable {
+/* --- Library (applications) --- */
+:host(ak-library-impl) .pf-c-card.pf-m-hoverable,
+:host(ak-library-impl) .pf-c-card {
     background: rgba(255, 255, 255, 0.08) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    backdrop-filter: blur(10px) !important;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     border-radius: 20px !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    backdrop-filter: blur(10px) !important;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease !important;
 }
 
 :host(ak-library-impl) .pf-c-card.pf-m-hoverable:hover {
@@ -1744,674 +1340,19 @@ ak-flow-executor::part(locale-select-select) {
     border-color: rgba(255, 255, 255, 0.25) !important;
 }
 
-/* Remove PatternFly default hover flash/border */
-:host(ak-library-impl) .pf-c-card.pf-m-hoverable::after,
 :host(ak-library-impl) .pf-c-card.pf-m-hoverable::before,
-:host(ak-library-impl) .pf-c-card.pf-m-hoverable:hover::after,
-:host(ak-library-impl) .pf-c-card.pf-m-hoverable:hover::before {
+:host(ak-library-impl) .pf-c-card.pf-m-hoverable::after {
     display: none !important;
-    border: none !important;
-    content: none !important;
-    box-shadow: none !important;
 }
 
 :host(ak-library-impl) .pf-c-card__title,
-:host(ak-library-impl) .pf-c-card__body {
-    color: white !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+:host(ak-library-impl) .pf-c-card__body,
+:host(ak-library-impl) .pf-c-content,
+:host(ak-library-impl) h1 {
+    color: var(--glass-text) !important;
+    text-shadow: var(--glass-text-shadow) !important;
 }
 
-/* ===== DASHBOARD SEARCH BAR ===== */
-/* Fix the red underline on hover/focus to be white instead */
-
-:host(ak-library-impl) input[type="text"],
-:host(ak-library-impl) input[type="search"],
-:host(ak-library-impl) .pf-c-form-control {
-    border-bottom-color: rgba(255, 255, 255, 0.3) !important;
-}
-
-:host(ak-library-impl) input[type="text"]:hover,
-:host(ak-library-impl) input[type="search"]:hover,
-:host(ak-library-impl) input[type="text"]:focus,
-:host(ak-library-impl) input[type="search"]:focus,
-:host(ak-library-impl) .pf-c-form-control:hover,
-:host(ak-library-impl) .pf-c-form-control:focus {
-    border-bottom-color: white !important;
-    border-color: rgba(255, 255, 255, 0.5) !important;
-}
-
-
-/* ===== DISABLE HOVER ON SETTINGS CARDS ===== */
-/* These cards should be static containers, not interactive */
-
-:host(ak-user-settings) .pf-c-card:hover,
-:host(ak-user-settings-flow-executor) .pf-c-card:hover,
-:host(ak-user-settings-password) .pf-c-card:hover {
-    transform: none !important;
-    background: rgba(255, 255, 255, 0.08) !important;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
-    border-color: rgba(255, 255, 255, 0.1) !important;
-}
-
-:host(ak-user-settings) .pf-c-card.pf-m-hoverable::after,
-:host(ak-user-settings) .pf-c-card.pf-m-hoverable::before,
-:host(ak-user-settings) .pf-c-card:hover::after,
-:host(ak-user-settings) .pf-c-card:hover::before,
-:host(ak-user-settings-flow-executor) .pf-c-card:hover::after,
-:host(ak-user-settings-flow-executor) .pf-c-card:hover::before,
-:host(ak-user-settings-password) .pf-c-card:hover::after,
-:host(ak-user-settings-password) .pf-c-card:hover::before {
-    display: none !important;
-    content: none !important;
-    border: none !important;
-}
-
-/* ===== USER SETTINGS TABLES TRANSPARENCY ===== */
-/* Remove grey background from tables in user settings only */
-
-:host(ak-user-session-list) .pf-c-table,
-:host(ak-user-settings-mfa) .pf-c-table,
-:host(ak-user-consent-list) .pf-c-table,
-:host(ak-user-reputation-list) .pf-c-table,
-:host(ak-user-token-list) .pf-c-table,
-:host(ak-user-session-list) .pf-c-table tr,
-:host(ak-user-settings-mfa) .pf-c-table tr,
-:host(ak-user-consent-list) .pf-c-table tr,
-:host(ak-user-reputation-list) .pf-c-table tr,
-:host(ak-user-token-list) .pf-c-table tr {
-    background-color: transparent !important;
-    background: transparent !important;
-    --pf-c-table--BackgroundColor: transparent !important;
-}
-
-:host(ak-user-session-list) .pf-c-table tbody>tr>*,
-:host(ak-user-settings-mfa) .pf-c-table tbody>tr>*,
-:host(ak-user-consent-list) .pf-c-table tbody>tr>*,
-:host(ak-user-reputation-list) .pf-c-table tbody>tr>*,
-:host(ak-user-token-list) .pf-c-table tbody>tr>* {
-    --pf-c-table--cell--BackgroundColor: transparent !important;
-    border-bottom-color: rgba(255, 255, 255, 0.1) !important;
-}
-
-/* Remove card background if it wraps the table */
-:host(ak-user-session-list) .pf-c-card,
-:host(ak-user-settings-mfa) .pf-c-card,
-:host(ak-user-consent-list) .pf-c-card,
-:host(ak-user-reputation-list) .pf-c-card,
-:host(ak-user-token-list) .pf-c-card {
-    background-color: transparent !important;
-    box-shadow: none !important;
-}
-
-/* Table Headers (Toolbar) and Footers (Pagination) */
-:host(ak-user-session-list) .pf-c-toolbar,
-:host(ak-user-settings-mfa) .pf-c-toolbar,
-:host(ak-user-consent-list) .pf-c-toolbar,
-:host(ak-user-reputation-list) .pf-c-toolbar,
-:host(ak-user-token-list) .pf-c-toolbar,
-:host(ak-user-session-list) .pf-c-pagination,
-:host(ak-user-settings-mfa) .pf-c-pagination,
-:host(ak-user-consent-list) .pf-c-pagination,
-:host(ak-user-reputation-list) .pf-c-pagination,
-:host(ak-user-token-list) .pf-c-pagination {
-    background-color: transparent !important;
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    --pf-c-toolbar--BackgroundColor: transparent !important;
-}
-
-/* Toolbar Buttons (Refresh, Delete) */
-:host(ak-user-session-list) .pf-c-toolbar .pf-c-button,
-:host(ak-user-settings-mfa) .pf-c-toolbar .pf-c-button,
-:host(ak-user-consent-list) .pf-c-toolbar .pf-c-button,
-:host(ak-user-reputation-list) .pf-c-toolbar .pf-c-button,
-:host(ak-user-token-list) .pf-c-toolbar .pf-c-button,
-/* Fix specifically for ak-spinner-button which wraps the button */
-:host(ak-user-session-list) ak-spinner-button .pf-c-button,
-:host(ak-user-settings-mfa) ak-spinner-button .pf-c-button,
-:host(ak-user-consent-list) ak-spinner-button .pf-c-button,
-:host(ak-user-reputation-list) ak-spinner-button .pf-c-button,
-:host(ak-user-token-list) ak-spinner-button .pf-c-button,
-/* Target the shadow DOM part for spinner buttons */
-:host(ak-user-session-list) ak-spinner-button::part(spinner-button),
-:host(ak-user-settings-mfa) ak-spinner-button::part(spinner-button),
-:host(ak-user-consent-list) ak-spinner-button::part(spinner-button),
-:host(ak-user-reputation-list) ak-spinner-button::part(spinner-button),
-:host(ak-user-token-list) ak-spinner-button::part(spinner-button) {
-    background: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    color: white !important;
-    backdrop-filter: blur(5px);
-    border-radius: 6px !important;
-}
-
-/* Fix pseudo-elements that cause the blue border in PatternFly */
-:host(ak-user-session-list) ak-spinner-button::part(spinner-button)::after,
-:host(ak-user-settings-mfa) ak-spinner-button::part(spinner-button)::after,
-:host(ak-user-consent-list) ak-spinner-button::part(spinner-button)::after,
-:host(ak-user-reputation-list) ak-spinner-button::part(spinner-button)::after,
-:host(ak-user-token-list) ak-spinner-button::part(spinner-button)::after {
-    border: none !important;
-    border-color: transparent !important;
-}
-
-/* Secondary Actions in Token List (Create, etc) */
-:host(ak-user-token-list) .pf-c-button.pf-m-secondary {
-    background: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    color: white !important;
-}
-
-:host(ak-user-token-list) .pf-c-button.pf-m-secondary::after {
-    border: none !important;
-    border-color: transparent !important;
-}
-
-/* Specific fix for "Enroll" dropdown toggle */
-:host(ak-user-settings-mfa) .pf-c-dropdown__toggle.pf-m-primary {
-    background: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    color: white !important;
-}
-
-:host(ak-user-settings-mfa) .pf-c-dropdown__toggle.pf-m-primary:after {
-    border: none !important;
-}
-
-/* Search Bar Styling */
-:host(ak-table-search) .pf-c-form-control,
-:host(ak-table-search) input[type="search"] {
-    background-color: rgba(255, 255, 255, 0.08) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    color: white !important;
-    border-radius: 6px !important;
-}
-
-/* Search Bar Hover - Use accent color */
-:host(ak-table-search) .pf-c-form-control:hover,
-:host(ak-table-search) input[type="search"]:hover {
-    border-color: var(--ak-accent) !important;
-}
-
-/* ========================================= */
-/* GLOBAL CHIP / BADGE FIX                   */
-/* ========================================= */
-
-/* ========================================= */
-/* ========================================= */
-/* SPECIFIC HOST CHIP FIX (USER INTERFACE)   */
-/* ========================================= */
-
-/* Target ak-chip ONLY within specific User Interface components */
-/* This ensures Admin Interface chips are NEVER touched */
-
-:host(ak-user-consent-list) ak-chip,
-:host(ak-user-consent-list) ak-chip[theme="dark"],
-:host(ak-user-token-list) ak-chip,
-:host(ak-user-token-list) ak-chip[theme="dark"],
-:host(ak-user-settings-mfa) ak-chip,
-:host(ak-user-settings-mfa) ak-chip[theme="dark"],
-:host(ak-user-session-list) ak-chip,
-:host(ak-user-session-list) ak-chip[theme="dark"],
-:host(ak-user-reputation-list) ak-chip,
-:host(ak-user-reputation-list) ak-chip[theme="dark"],
-/* FIX: Permission Chips */
-:host(ak-user-consent-list) .pf-c-chip,
-.pf-c-chip,
-ak-chip {
-    --pf-c-chip--BackgroundColor: #333333 !important;
-    --pf-c-chip__text--Color: white !important;
-    --pf-c-chip--Color: white !important;
-    color: white !important;
-}
-
-
-
-:host(ak-user-consent-list) ak-chip::part(chip),
-:host(ak-user-token-list) ak-chip::part(chip),
-:host(ak-user-settings-mfa) ak-chip::part(chip),
-:host(ak-user-session-list) ak-chip::part(chip),
-:host(ak-user-reputation-list) ak-chip::part(chip) {
-    background: #333333 !important;
-    background-color: #333333 !important;
-    background-image: none !important;
-    color: white !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-radius: 12px !important;
-}
-
-:host(ak-user-consent-list) ak-chip::part(chip)::before,
-:host(ak-user-consent-list) ak-chip::part(chip)::after,
-:host(ak-user-token-list) ak-chip::part(chip)::before,
-:host(ak-user-token-list) ak-chip::part(chip)::after,
-:host(ak-user-settings-mfa) ak-chip::part(chip)::before,
-:host(ak-user-settings-mfa) ak-chip::part(chip)::after,
-:host(ak-user-session-list) ak-chip::part(chip)::before,
-:host(ak-user-session-list) ak-chip::part(chip)::after,
-:host(ak-user-reputation-list) ak-chip::part(chip)::before,
-:host(ak-user-reputation-list) ak-chip::part(chip)::after {
-    display: none !important;
-    content: none !important;
-}
-
-:host(ak-user-consent-list) ak-chip::part(chip):hover,
-:host(ak-user-token-list) ak-chip::part(chip):hover,
-:host(ak-user-settings-mfa) ak-chip::part(chip):hover,
-:host(ak-user-session-list) ak-chip::part(chip):hover,
-:host(ak-user-reputation-list) ak-chip::part(chip):hover {
-    background-color: rgba(255, 255, 255, 0.2) !important;
-}
-
-:host(ak-user-session-list) .pf-c-toolbar .pf-c-button:hover,
-:host(ak-user-settings-mfa) .pf-c-toolbar .pf-c-button:hover,
-:host(ak-user-consent-list) .pf-c-toolbar .pf-c-button:hover,
-:host(ak-user-reputation-list) .pf-c-toolbar .pf-c-button:hover,
-:host(ak-user-token-list) .pf-c-toolbar .pf-c-button:hover,
-:host(ak-user-session-list) ak-spinner-button .pf-c-button:hover,
-:host(ak-user-settings-mfa) ak-spinner-button .pf-c-button:hover,
-:host(ak-user-consent-list) ak-spinner-button .pf-c-button:hover,
-:host(ak-user-reputation-list) ak-spinner-button .pf-c-button:hover,
-:host(ak-user-token-list) ak-spinner-button .pf-c-button:hover,
-:host(ak-user-session-list) ak-spinner-button::part(spinner-button):hover,
-:host(ak-user-settings-mfa) ak-spinner-button::part(spinner-button):hover,
-:host(ak-user-consent-list) ak-spinner-button::part(spinner-button):hover,
-:host(ak-user-reputation-list) ak-spinner-button::part(spinner-button):hover,
-:host(ak-user-token-list) ak-spinner-button::part(spinner-button):hover,
-:host(ak-user-settings-mfa) .pf-c-dropdown__toggle.pf-m-primary:hover,
-:host(ak-user-token-list) .pf-c-button.pf-m-secondary:hover,
-:host(ak-user-consent-list) ak-chip:hover {
-    background: rgba(255, 255, 255, 0.2) !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-:host(ak-user-consent-list) ak-chip::part(chip):hover {
-    background-color: rgba(255, 255, 255, 0.2) !important;
-}
-
-/* ========================================= */
-/* DASHBOARD APP ICONS REFINEMENT            */
-/* ========================================= */
-
-/* Reduce the size of large icons (User Dashboard) */
-ak-app-icon[size="pf-m-lg"] {
-    --icon-height: 3rem !important;
-    /* Reduced from 4rem */
-}
-
-/* Rounded corners for App Icons to prevent sharp rectangles */
-ak-app-icon::part(icon) {
-    border-radius: 15px !important;
-    overflow: hidden !important;
-}
-
-/* Ensure images cover the area nicely if they have backgrounds */
-ak-app-icon::part(icon image) {
-    border-radius: 15px !important;
-}
-
-
-
-.pf-c-label.pf-m-green {
-    --pf-c-label--BackgroundColor: #1c1c1c !important;
-    --pf-c-label__icon--Color: #4d9144;
-    --pf-c-label__content--before--BorderColor: #474747 !important;
-    --pf-c-label__content--Color: var(--pf-c-label--m-green__content--Color);
-    --pf-c-label__content--before--BorderColor: var(--pf-c-label--m-green__content--before--BorderColor);
-    --pf-c-label__content--link--hover--before--BorderColor: var(--pf-c-label--m-green__content--link--hover--before--BorderColor);
-    --pf-c-label__content--link--focus--before--BorderColor: var(--pf-c-label--m-green__content--link--focus--before--BorderColor);
-    --pf-c-label--m-outline__content--Color: var(--pf-c-label--m-outline--m-green__content--Color);
-    --pf-c-label--m-outline__content--before--BorderColor: #3f453f !important;
-    /* --pf-c-label--m-outline__content--link--hover--before--BorderColor: var(--pf-c-label--m-outline--m-green__content--link--hover--before--BorderColor); */
-    --pf-c-label--m-outline__content--link--focus--before--BorderColor: var(--pf-c-label--m-outline--m-green__content--link--focus--before--BorderColor);
-    --pf-c-label--m-editable__content--before--BorderColor: var(--pf-c-label--m-green__content--before--BorderColor);
-    --pf-c-label--m-editable__content--hover--before--BorderColor: var(--pf-c-label--m-green__content--before--BorderColor);
-    --pf-c-label--m-editable__content--focus--before--BorderColor: var(--pf-c-label--m-green__content--before--BorderColor);
-}
-
-.pf-c-label.pf-m-gray {
-    --pf-c-label--BackgroundColor: #1a1a1a !important;
-    --pf-c-label__icon--Color: #d91e1e !important;
-    --pf-c-label__content--Color: var(--pf-c-label--m-gray__content--Color);
-    --pf-c-label__content--before--BorderColor: var(--pf-c-label--m-gray__content--before--BorderColor);
-    --pf-c-label__content--link--hover--before--BorderColor: var(--pf-c-label--m-gray__content--link--hover--before--BorderColor);
-    --pf-c-label__content--link--focus--before--BorderColor: var(--pf-c-label--m-gray__content--link--focus--before--BorderColor);
-}
-
-
-/* ========================================= */
-/* SOCIAL LOGIN BUTTONS (EXTERNAL IDP)       */
-/* ========================================= */
-
-
-
-
-
-
-/* Custom CSS-only Separator "Ou" */
-.pf-c-login__main-footer-links::before {
-    content: var(--ak-social-separator-text) !important;
-    display: block !important;
-    width: 100% !important;
-    text-align: center !important;
-    font-size: 15px !important;
-    color: #ffffff !important;
-    opacity: 1 !important;
-    margin-bottom: 20px !important;
-    margin-top: 10px !important;
-    font-weight: 400 !important;
-
-    /* The Line Trick: Solid White & Balanced Gap for "Continuer avec" */
-    background: linear-gradient(to right,
-            rgba(255, 255, 255, 1) 0%,
-            rgba(255, 255, 255, 1) 32%,
-            transparent 32%,
-            transparent 68%,
-            rgba(255, 255, 255, 1) 68%,
-            rgba(255, 255, 255, 1) 100%) !important;
-    background-size: 100% 1px !important;
-    background-position: center !important;
-    background-repeat: no-repeat !important;
-}
-
-.pf-c-login__main-footer-links-item-link {
-    background: rgba(255, 255, 255, 0.08) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    color: white !important;
-    border-radius: 12px !important;
-    padding: 10px 20px !important;
-    transition: all 0.3s ease !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    text-decoration: none !important;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
-}
-
-/* Resize the icon (FontAwesome or SVG) */
-.pf-c-login__main-footer-links-item-link i,
-.pf-c-login__main-footer-links-item-link svg {
-    font-size: 18px !important;
-    width: 18px !important;
-    height: 18px !important;
-    text-align: center !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-
-.pf-c-login__main-footer-links-item-link:hover {
-    background: rgba(255, 255, 255, 0.2) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2) !important;
-    border-color: rgba(255, 255, 255, 0.4) !important;
-}
-
-/* Ensure no default underlined link style */
-.pf-c-login__main-footer-links-item-link:active,
-.pf-c-login__main-footer-links-item-link:visited {
-    color: white !important;
-    text-decoration: none !important;
-}
-
-/* Specific fix for images inside social buttons */
-.pf-c-login__main-footer-links-item-link img {
-    margin-right: 8px !important;
-    max-height: 20px !important;
-}
-
-/* ===== SOCIAL BUTTONS IN FOOTER (Discord, Google, etc.) ===== */
-/* Horizontal layout with white glassmorphism matching login button */
-
-/* Container for horizontal layout */
-.pf-c-login__main-footer-links {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: wrap !important;
-    justify-content: center !important;
-    align-items: center !important;
-    gap: 12px !important;
-    margin-top: 10px !important;
-}
-
-.pf-c-login__main-footer-links-item {
-    display: inline-flex !important;
-    width: auto !important;
-}
-
-
-.pf-c-login__main-footer-links-item button {
-    background: rgba(255, 255, 255, 0.15) !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    color: white !important;
-    font-weight: 600 !important;
-    border-radius: 12px !important;
-    padding: 10px 16px !important;
-    font-size: 14px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 6px !important;
-    min-width: 100px !important;
-    max-width: 120px !important;
-    height: auto !important;
-    transition: all 0.3s ease !important;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(255, 255, 255, 0.1) !important;
-    position: relative;
-    overflow: hidden;
-    margin: 0 !important;
-    flex: 0 0 auto !important;
-}
-
-.pf-c-login__main-footer-links-item button img {
-    width: 18px !important;
-    height: 18px !important;
-    margin-right: 0 !important;
-    flex-shrink: 0;
-    display: inline-block;
-}
-
-/* Remove specific Discord/Google colors - use white glassmorphism for all */
-.pf-c-login__main-footer-links-item button:has(img[src*="discord"]),
-.pf-c-login__main-footer-links-item button:has(img[src*="google"]) {
-    background: rgba(255, 255, 255, 0.15) !important;
-    border-color: rgba(255, 255, 255, 0.3) !important;
-}
-
-/* Make Discord icon white */
-.pf-c-login__main-footer-links-item button:has(img[src*="discord"]) img {
-    filter: brightness(0) invert(1);
-}
-
-/* Hover effect - identical to login button */
-.pf-c-login__main-footer-links-item button:hover {
-    background: rgba(255, 255, 255, 0.25) !important;
-    border-color: rgba(255, 255, 255, 0.4) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(255, 255, 255, 0.15) !important;
-    cursor: pointer;
-}
-
-/* ========================================= */
-/* ===== AUTHENTIK 2026.x COMPATIBILITY ==== */
-/* ========================================= */
-/* New web components and class variants introduced between 2025.10.x and 2026.2.x. */
-
-/* --- pf-m-block: block-level variant on primary/secondary buttons (login & MFA) --- */
-:host(ak-stage-identification) .pf-c-button.pf-m-primary.pf-m-block,
-:host(ak-stage-password) .pf-c-button.pf-m-primary.pf-m-block,
-:host(ak-stage-authenticator-validate) .pf-c-button.pf-m-primary.pf-m-block,
-:host(ak-stage-authenticator-validate-code) .pf-c-button.pf-m-primary.pf-m-block,
-:host(ak-stage-authenticator-validate-duo) .pf-c-button.pf-m-primary.pf-m-block,
-:host(ak-stage-authenticator-validate-webauthn) .pf-c-button.pf-m-primary.pf-m-block,
-:host(ak-stage-consent) .pf-c-button.pf-m-primary.pf-m-block {
-    width: 100% !important;
-    display: block !important;
-    text-align: center !important;
-}
-
-:host(ak-stage-authenticator-validate) .pf-c-button.pf-m-secondary.pf-m-block,
-:host(ak-stage-authenticator-validate-code) .pf-c-button.pf-m-secondary.pf-m-block,
-:host(ak-stage-authenticator-validate-webauthn) .pf-c-button.pf-m-secondary.pf-m-block {
-    width: 100% !important;
-    display: block !important;
-}
-
-/* --- <ak-flow-card>: text colors inside the wrapper. The host element itself
-   already has `display: block + background: transparent` declared earlier
-   (see ak-flow-card transparency section). --- */
-:host(ak-flow-card) .pf-c-title,
-:host(ak-flow-card) h1,
-:host(ak-flow-card) label,
-:host(ak-flow-card) p,
-:host(ak-flow-card) .pf-c-form__label,
-:host(ak-flow-card) .pf-c-form__label-text {
-    color: white !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
-}
-
-:host(ak-flow-card) .pf-c-form__helper-text {
-    color: rgba(255, 255, 255, 0.7) !important;
-    font-size: 13px !important;
-    margin-top: 6px !important;
-}
-
-/* --- <ak-form-static>: avatar + username block on password/MFA stages --- */
-:host(ak-form-static) {
-    display: block !important;
-    margin-bottom: 16px !important;
-}
-
-:host(ak-form-static) .primary-content,
-:host(ak-form-static) .username {
-    color: white !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
-}
-
-:host(ak-form-static) .pf-c-avatar {
-    border: 2px solid rgba(255, 255, 255, 0.2) !important;
-    border-radius: 50% !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
-}
-
-:host(ak-form-static) .links a {
-    color: white !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
-    opacity: 0.85;
-    transition: opacity 0.2s ease;
-}
-
-:host(ak-form-static) .links a:hover {
-    opacity: 1;
-    text-decoration: underline !important;
-}
-
-/* --- <ak-flow-input-password>: 2026.x replacement for .pf-c-input-group password wrapper --- */
-:host(ak-flow-input-password) {
-    display: block !important;
-    width: 100% !important;
-}
-
-:host(ak-flow-input-password) .pf-c-form-control.pf-m-icon,
-:host(ak-flow-input-password) input[type="password"] {
-    background-color: rgba(255, 255, 255, 0.06) !important;
-    border: 1.5px solid rgba(255, 255, 255, 0.2) !important;
-    border-radius: 14px !important;
-    padding: 10px 15px !important;
-    color: white !important;
-    backdrop-filter: blur(20px) saturate(130%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(130%) !important;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-:host(ak-flow-input-password) .pf-c-form-control:focus {
-    border-color: rgba(102, 126, 234, 0.5) !important;
-    background-color: rgba(255, 255, 255, 0.08) !important;
-}
-
-/* --- <ak-tabs>: new container hosting .pf-c-tabs (vertical for user settings) --- */
-:host(ak-tabs) .pf-c-tabs.pf-m-vertical {
-    background: transparent !important;
-}
-
-:host(ak-tabs) .pf-c-tabs__list {
-    border-color: rgba(255, 255, 255, 0.1) !important;
-}
-
-:host(ak-tabs) .pf-c-tabs__link,
-:host(ak-tabs) .pf-c-tabs__button {
-    color: rgba(255, 255, 255, 0.7) !important;
-    background: transparent !important;
-    transition: all 0.2s ease !important;
-}
-
-:host(ak-tabs) .pf-c-tabs__link:hover,
-:host(ak-tabs) .pf-c-tabs__button:hover {
-    color: white !important;
-    background: rgba(255, 255, 255, 0.05) !important;
-}
-
-:host(ak-tabs) .pf-c-tabs__item.pf-m-current .pf-c-tabs__link,
-:host(ak-tabs) .pf-c-tabs__item.pf-m-current .pf-c-tabs__button {
-    color: white !important;
-    background: rgba(255, 255, 255, 0.1) !important;
-}
-
-:host(ak-tabs) .pf-c-tabs__item.pf-m-current::after {
-    border-color: #667eea !important;
-}
-
-/* --- <ak-empty-state> + <ak-spinner>: loading states inside tables --- */
-:host(ak-empty-state) .pf-c-empty-state,
-:host(ak-empty-state) .pf-c-empty-state__content,
-:host(ak-empty-state) .pf-c-empty-state__body {
-    background: transparent !important;
-    color: rgba(255, 255, 255, 0.85) !important;
-}
-
-:host(ak-empty-state) .pf-c-title,
-:host(ak-empty-state) h1 {
-    color: white !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
-}
-
-:host(ak-empty-state) .pf-c-empty-state__icon,
-:host(ak-empty-state) i.pf-icon {
-    color: rgba(255, 255, 255, 0.6) !important;
-}
-
-:host(ak-spinner) .pf-c-spinner,
-:host(ak-spinner) .pf-c-spinner__clipper,
-:host(ak-spinner) .pf-c-spinner__lead-ball,
-:host(ak-spinner) .pf-c-spinner__tail-ball {
-    --pf-c-spinner--Color: rgba(255, 255, 255, 0.85) !important;
-    color: rgba(255, 255, 255, 0.85) !important;
-}
-
-/* --- <pf-tooltip>: PatternFly v5 tooltips on header icons --- */
-pf-tooltip {
-    --pf-tooltip--Color: white;
-    --pf-tooltip--BackgroundColor: rgba(20, 20, 30, 0.95);
-}
-
-/* --- <ak-spinner-button>: also matches the "Refresh" button in user-settings toolbars --- */
-:host(ak-spinner-button) button.pf-c-button.pf-m-progress.pf-m-secondary {
-    background: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    color: white !important;
-    border-radius: 8px !important;
-    backdrop-filter: blur(10px) !important;
-}
-
-:host(ak-spinner-button) button.pf-c-button:hover {
-    background: rgba(255, 255, 255, 0.2) !important;
-}
-
-/* --- Dashboard parts: app-group / card-wrapper (2026.x ak-library-impl structure) --- */
 :host(ak-library-impl) fieldset[part="app-group"] {
     border: none !important;
     background: transparent !important;
@@ -2420,8 +1361,8 @@ pf-tooltip {
 }
 
 :host(ak-library-impl) legend[part="app-group-header"] {
-    color: white !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+    color: var(--glass-text) !important;
+    text-shadow: var(--glass-text-shadow) !important;
     font-size: 18px !important;
     font-weight: 600 !important;
     margin-bottom: 12px !important;
@@ -2433,22 +1374,41 @@ pf-tooltip {
     display: none !important;
 }
 
-:host(ak-library-impl) [part="card-wrapper"] {
-    background: transparent !important;
+/* Search field */
+:host(ak-library-impl) input[type="text"],
+:host(ak-library-impl) input[type="search"],
+:host(ak-library-impl) .pf-c-form-control {
+    color: var(--glass-text) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 12px !important;
 }
 
-/* Card dropdown menu (HTML5 popover) shown via the ⋮ button on each app card.
-   Reach it from document level via ::part(), since :host(...) doesn't apply. */
+:host(ak-library-impl) input[type="text"]:focus,
+:host(ak-library-impl) input[type="search"]:focus,
+:host(ak-library-impl) .pf-c-form-control:focus {
+    border-color: rgba(255, 255, 255, 0.5) !important;
+    outline: none !important;
+}
+
+/* App icons */
+ak-app-icon::part(icon),
+ak-app-icon::part(icon image) {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    object-fit: contain !important;
+}
+
+/* App card "..." menu (popover) */
 ak-library-impl::part(card-header-actions-menu) {
+    color: var(--glass-text) !important;
     background: rgba(20, 20, 30, 0.95) !important;
-    background-color: rgba(20, 20, 30, 0.95) !important;
     border: 1px solid rgba(255, 255, 255, 0.15) !important;
     border-radius: 12px !important;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
-    backdrop-filter: blur(20px) saturate(140%) !important;
     -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
+    backdrop-filter: blur(20px) saturate(140%) !important;
     padding: 6px !important;
-    color: white !important;
 }
 
 ak-library-impl::part(card-header-action) {
@@ -2456,12 +1416,11 @@ ak-library-impl::part(card-header-action) {
     background: transparent !important;
     border-radius: 8px !important;
     padding: 8px 12px !important;
-    transition: background 0.2s ease !important;
 }
 
 ak-library-impl::part(card-header-action):hover {
+    color: var(--glass-text) !important;
     background: rgba(255, 255, 255, 0.1) !important;
-    color: white !important;
 }
 
 ak-library-impl::part(card-header-action-publisher) {
@@ -2477,158 +1436,225 @@ ak-library-impl::part(card-header-actions-button) {
     color: rgba(255, 255, 255, 0.7) !important;
     background: transparent !important;
     border: none !important;
-    transition: color 0.2s ease !important;
 }
 
 ak-library-impl::part(card-header-actions-button):hover {
-    color: white !important;
+    color: var(--glass-text) !important;
     background: rgba(255, 255, 255, 0.1) !important;
     border-radius: 8px !important;
 }
 
-/* ========================================= */
-/* === PATTERNFLY CSS VARS (shadow-piercing) === */
-/* ========================================= */
-/* CSS custom properties inherit through shadow boundaries unless redefined
-   inside. Authentik's components style their inner elements via these PF
-   variables, so setting them at :root reaches deeply nested inputs/tables
-   that ::part() can't address (no `part` attributes on those elements). */
-
-:root,
-html,
-body {
-    /* Form controls (inputs, selects, textareas) */
-    --pf-c-form-control--BackgroundColor: rgba(255, 255, 255, 0.08);
-    --pf-c-form-control--Color: white;
-    --pf-c-form-control--BorderColor: rgba(255, 255, 255, 0.2);
-    --pf-c-form-control--BorderTopColor: rgba(255, 255, 255, 0.2);
-    --pf-c-form-control--BorderRightColor: rgba(255, 255, 255, 0.2);
-    --pf-c-form-control--BorderLeftColor: rgba(255, 255, 255, 0.2);
-    --pf-c-form-control--BorderBottomColor: rgba(255, 255, 255, 0.4);
-    --pf-c-form-control--PlaceholderColor: rgba(255, 255, 255, 0.5);
-    --pf-c-form-control--hover--BorderBottomColor: rgba(102, 126, 234, 0.6);
-    --pf-c-form-control--focus--BorderBottomColor: rgba(102, 126, 234, 0.8);
-    --pf-c-form-control--BorderRadius: 14px;
-
-    /* Form labels */
-    --pf-c-form__label--Color: white;
-    --pf-c-form__label-text--Color: white;
-    --pf-c-form__label-required--Color: #ff6b6b;
-
-    /* Login flow main box (the <main part="main">) */
-    --pf-c-login__main--BackgroundColor: transparent;
-    --pf-c-login__main--BoxShadow: none;
-    --pf-c-login__main--Color: white;
-
-    /* Tables (user-settings list views) */
-    --pf-c-table--BackgroundColor: transparent;
-    --pf-c-table--cell--BackgroundColor: transparent;
-    --pf-c-table--cell--Color: rgba(255, 255, 255, 0.9);
-    --pf-c-table--BorderColor: rgba(255, 255, 255, 0.1);
-    --pf-c-table--cell--BorderBottomColor: rgba(255, 255, 255, 0.1);
-    --pf-c-table--m-grid-md__tr--BorderColor: rgba(255, 255, 255, 0.08);
-    --pf-c-table__sort__button--Color: rgba(255, 255, 255, 0.85);
-    --pf-c-table__sort__button--hover--Color: white;
-    --pf-c-table__sort--m-selected__button--Color: white;
-    --pf-c-table-thead--cell--Color: white;
-    --pf-c-table-thead--cell--FontSize: 13px;
-
-    /* Tooltips (pf-tooltip web component) */
-    --pf-c-tooltip--BackgroundColor: rgba(20, 20, 30, 0.95);
-    --pf-c-tooltip__content--Color: white;
-    --pf-c-tooltip__content--BackgroundColor: rgba(20, 20, 30, 0.95);
-    --pf-c-tooltip--MaxWidth: 250px;
-    --pf-c-tooltip__content--PaddingTop: 6px;
-    --pf-c-tooltip__content--PaddingBottom: 6px;
-    --pf-c-tooltip__content--PaddingLeft: 10px;
-    --pf-c-tooltip__content--PaddingRight: 10px;
-    --pf-c-tooltip__content--BorderRadius: 8px;
-    --pf-c-tooltip__content--FontSize: 13px;
-
-    /* PatternFly v5 tooltip variants (newer Authentik) */
-    --pf-v5-c-tooltip--BackgroundColor: rgba(20, 20, 30, 0.95);
-    --pf-v5-c-tooltip__content--Color: white;
-    --pf-v5-c-tooltip__content--BackgroundColor: rgba(20, 20, 30, 0.95);
-
-    /* Pagination + toolbar in shadow user-settings tables */
-    --pf-c-toolbar--BackgroundColor: transparent;
-    --pf-c-pagination--BackgroundColor: transparent;
-    --pf-c-pagination__nav-control__button--Color: white;
-
-    /* Cards in user settings */
-    --pf-c-card--BackgroundColor: rgba(255, 255, 255, 0.05);
-    --pf-c-card__title--Color: white;
-    --pf-c-card__body--Color: rgba(255, 255, 255, 0.9);
-
-    /* Buttons — wrap long labels and keep them centered in their parent.
-       The "Sélectionnez une autre méthode d'authentification" button is the
-       main culprit for overflow. */
-    --pf-c-button--LineHeight: 1.4;
-    --pf-c-button--FontSize: 14px;
-    --pf-c-button--PaddingTop: 10px;
-    --pf-c-button--PaddingBottom: 10px;
-    --pf-c-button--PaddingLeft: 14px;
-    --pf-c-button--PaddingRight: 14px;
-    --pf-c-button--m-block--width: 100%;
-    --pf-c-button--m-block--MaxWidth: 100%;
-
-    /* Empty state (e.g. "Authentification en cours...") — center its content. */
-    --pf-c-empty-state__content--TextAlign: center;
-    --pf-c-empty-state--TextAlign: center;
-    --pf-c-empty-state--JustifyContent: center;
-    --pf-c-empty-state--AlignItems: center;
-    --pf-c-empty-state--PaddingTop: 16px;
-    --pf-c-empty-state--PaddingBottom: 16px;
+/* --- User settings --- */
+:host(ak-user-settings) .pf-c-card,
+:host(ak-user-settings-flow-executor) .pf-c-card,
+:host(ak-user-settings-password) .pf-c-card,
+:host(ak-user-settings-mfa) .pf-c-card,
+:host(ak-user-settings-source) .pf-c-card,
+.pf-c-expandable-section.pf-m-display-lg {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 20px !important;
+    -webkit-backdrop-filter: blur(20px) saturate(130%) !important;
+    backdrop-filter: blur(20px) saturate(130%) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
 }
 
-/* In case Authentik DOES inject the Custom CSS into stage shadow roots, these
-   :host() rules help center the empty state container (the spinner +
-   "Authentification en cours..." message) inside the WebAuthn validate stage. */
-:host(ak-stage-authenticator-validate-webauthn) ak-empty-state,
-:host(ak-stage-authenticator-validate-code) ak-empty-state {
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    align-items: center !important;
-    text-align: center !important;
-    width: 100% !important;
-    margin: 16px auto !important;
+:host(ak-user-settings) .pf-c-card::before,
+:host(ak-user-settings) .pf-c-card::after {
+    display: none !important;
 }
 
-:host(ak-stage-authenticator-validate-webauthn) .pf-c-empty-state,
-:host(ak-stage-authenticator-validate-webauthn) .pf-c-empty-state__content,
-:host(ak-stage-authenticator-validate-code) .pf-c-empty-state,
-:host(ak-stage-authenticator-validate-code) .pf-c-empty-state__content {
-    text-align: center !important;
-    justify-content: center !important;
-    align-items: center !important;
-    margin: 0 auto !important;
+:host(ak-user-settings) .pf-c-title,
+:host(ak-user-settings) label,
+:host(ak-user-settings) .pf-c-card__title,
+:host(ak-user-settings-flow-executor) .pf-c-card__title,
+:host(ak-user-settings-password) .pf-c-card__title,
+:host(ak-form-element-horizontal) label,
+:host(ak-form-element-horizontal) .pf-c-form__label,
+:host(ak-user-stage-prompt) label,
+:host(ak-user-stage-prompt) .pf-c-title {
+    color: var(--glass-text) !important;
+    text-shadow: var(--glass-text-shadow) !important;
 }
 
-/* Force buttons to wrap their long text rather than overflowing. */
-:host(ak-stage-authenticator-validate-webauthn) button.pf-c-button.pf-m-block,
-:host(ak-stage-authenticator-validate-code) button.pf-c-button.pf-m-block,
-:host(ak-stage-password) button.pf-c-button.pf-m-block,
-:host(ak-stage-identification) button.pf-c-button.pf-m-block {
-    white-space: normal !important;
-    word-wrap: break-word !important;
-    overflow-wrap: break-word !important;
-    line-height: 1.4 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-    text-align: center !important;
+:host(ak-user-settings-flow-executor) .pf-c-form-control,
+:host(ak-user-settings-password) .pf-c-form-control,
+:host(ak-form-element-horizontal) .pf-c-form-control,
+:host(ak-form-element-horizontal) input,
+:host(ak-form-element-horizontal) select,
+:host(ak-user-stage-prompt) .pf-c-form-control,
+:host(ak-user-stage-prompt) input,
+:host(ak-user-stage-prompt) select {
+    color: var(--glass-text) !important;
+    background-color: var(--glass-control-bg) !important;
+    border: 1.5px solid var(--glass-control-border) !important;
+    border-radius: var(--glass-radius) !important;
+    padding: 10px 15px !important;
+    min-height: 40px !important;
+    height: auto !important;
 }
 
-/* === Tables — make the shadow-DOM tables horizontally scrollable on small
-   screens so columns don't overflow/overlap === */
+:host(ak-form-element-horizontal) select option,
+:host(ak-user-stage-prompt) select option {
+    background-color: #1f1f1f !important;
+    color: var(--glass-text) !important;
+}
+
+:host(ak-user-settings) .pf-c-button.pf-m-primary,
+:host(ak-user-settings-flow-executor) .pf-c-button.pf-m-primary,
+:host(ak-user-settings-password) .pf-c-button.pf-m-primary,
+:host(ak-user-stage-prompt) .pf-c-button.pf-m-primary,
+:host(ak-user-settings-source) .pf-c-button.pf-m-primary {
+    color: var(--glass-text) !important;
+    background: var(--glass-btn-bg) !important;
+    border: 1px solid var(--glass-btn-border) !important;
+    border-radius: var(--glass-radius) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    backdrop-filter: blur(20px) !important;
+    font-weight: 600 !important;
+    text-transform: none !important;
+}
+
+:host(ak-user-settings) .pf-c-button.pf-m-primary:hover,
+:host(ak-user-settings-flow-executor) .pf-c-button.pf-m-primary:hover,
+:host(ak-user-settings-password) .pf-c-button.pf-m-primary:hover,
+:host(ak-user-stage-prompt) .pf-c-button.pf-m-primary:hover,
+:host(ak-user-settings-source) .pf-c-button.pf-m-primary:hover {
+    background: var(--glass-btn-bg-hover) !important;
+}
+
+:host(ak-user-settings-source) .pf-c-button.pf-m-danger {
+    color: var(--glass-text) !important;
+    background: var(--glass-danger-bg) !important;
+    border: 1px solid var(--glass-danger-border) !important;
+    border-radius: var(--glass-radius) !important;
+    font-weight: 600 !important;
+}
+
+:host(ak-user-settings) .pf-c-button::after,
+:host(ak-user-settings-flow-executor) .pf-c-button::after,
+:host(ak-user-settings-source) .pf-c-button::after {
+    display: none !important;
+}
+
+/* Tabs (vertical on desktop, horizontal on mobile) */
+:host(ak-tabs) .pf-c-tabs,
+:host(ak-user-settings) .pf-c-tabs {
+    background: transparent !important;
+}
+
+:host(ak-tabs) .pf-c-tabs__list,
+:host(ak-user-settings) .pf-c-tabs__list {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+:host(ak-tabs) .pf-c-tabs__link,
+:host(ak-tabs) .pf-c-tabs__button,
+:host(ak-user-settings) .pf-c-tabs__link,
+:host(ak-user-settings) .pf-c-tabs__button {
+    color: rgba(255, 255, 255, 0.7) !important;
+    background: transparent !important;
+}
+
+:host(ak-tabs) .pf-c-tabs__link:hover,
+:host(ak-tabs) .pf-c-tabs__button:hover {
+    color: var(--glass-text) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+:host(ak-tabs) .pf-c-tabs__item.pf-m-current .pf-c-tabs__link,
+:host(ak-tabs) .pf-c-tabs__item.pf-m-current .pf-c-tabs__button,
+:host(ak-user-settings) .pf-c-tabs__item.pf-m-current .pf-c-tabs__link,
+:host(ak-user-settings) .pf-c-tabs__item.pf-m-current .pf-c-tabs__button {
+    color: var(--glass-text) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+:host(ak-tabs) .pf-c-tabs__item.pf-m-current::after,
+:host(ak-user-settings) .pf-c-tabs__item.pf-m-current::after {
+    border-color: var(--ak-accent) !important;
+}
+
+/* Lists (sessions, consents, MFA devices, tokens, reputation) */
+:host(ak-user-session-list) .pf-c-table,
+:host(ak-user-settings-mfa) .pf-c-table,
+:host(ak-user-consent-list) .pf-c-table,
+:host(ak-user-reputation-list) .pf-c-table,
+:host(ak-user-token-list) .pf-c-table,
+:host(ak-user-session-list) .pf-c-table tr,
+:host(ak-user-settings-mfa) .pf-c-table tr,
+:host(ak-user-consent-list) .pf-c-table tr,
+:host(ak-user-reputation-list) .pf-c-table tr,
+:host(ak-user-token-list) .pf-c-table tr,
+:host(ak-user-session-list) .pf-c-toolbar,
+:host(ak-user-settings-mfa) .pf-c-toolbar,
+:host(ak-user-consent-list) .pf-c-toolbar,
+:host(ak-user-reputation-list) .pf-c-toolbar,
+:host(ak-user-token-list) .pf-c-toolbar,
+:host(ak-user-session-list) .pf-c-pagination,
+:host(ak-user-settings-mfa) .pf-c-pagination,
+:host(ak-user-consent-list) .pf-c-pagination,
+:host(ak-user-reputation-list) .pf-c-pagination,
+:host(ak-user-token-list) .pf-c-pagination,
+:host(ak-user-session-list) .pf-c-card,
+:host(ak-user-settings-mfa) .pf-c-card,
+:host(ak-user-consent-list) .pf-c-card,
+:host(ak-user-reputation-list) .pf-c-card,
+:host(ak-user-token-list) .pf-c-card {
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+:host(ak-user-session-list) .pf-c-table tbody > tr > *,
+:host(ak-user-settings-mfa) .pf-c-table tbody > tr > *,
+:host(ak-user-consent-list) .pf-c-table tbody > tr > *,
+:host(ak-user-reputation-list) .pf-c-table tbody > tr > *,
+:host(ak-user-token-list) .pf-c-table tbody > tr > * {
+    border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Toolbar buttons (Refresh, Delete, Create, Enroll) */
+:host(ak-user-session-list) .pf-c-toolbar .pf-c-button,
+:host(ak-user-settings-mfa) .pf-c-toolbar .pf-c-button,
+:host(ak-user-consent-list) .pf-c-toolbar .pf-c-button,
+:host(ak-user-reputation-list) .pf-c-toolbar .pf-c-button,
+:host(ak-user-token-list) .pf-c-toolbar .pf-c-button,
+:host(ak-user-token-list) .pf-c-button.pf-m-secondary,
+:host(ak-user-settings-mfa) .pf-c-dropdown__toggle.pf-m-primary,
+:host(ak-spinner-button) button.pf-c-button {
+    color: var(--glass-text) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 8px !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+:host(ak-user-session-list) .pf-c-toolbar .pf-c-button:hover,
+:host(ak-user-settings-mfa) .pf-c-toolbar .pf-c-button:hover,
+:host(ak-user-consent-list) .pf-c-toolbar .pf-c-button:hover,
+:host(ak-user-reputation-list) .pf-c-toolbar .pf-c-button:hover,
+:host(ak-user-token-list) .pf-c-toolbar .pf-c-button:hover,
+:host(ak-user-token-list) .pf-c-button.pf-m-secondary:hover,
+:host(ak-user-settings-mfa) .pf-c-dropdown__toggle.pf-m-primary:hover,
+:host(ak-spinner-button) button.pf-c-button:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+
+:host(ak-user-token-list) .pf-c-button.pf-m-secondary::after,
+:host(ak-user-settings-mfa) .pf-c-dropdown__toggle.pf-m-primary::after,
+:host(ak-spinner-button) button.pf-c-button::after {
+    border: none !important;
+}
+
+/* Tables scroll horizontally on small screens instead of overflowing */
 ak-user-session-list::part(table-container),
 ak-user-consent-list::part(table-container),
 ak-user-settings-mfa::part(table-container),
 ak-user-token-list::part(table-container),
 ak-user-reputation-list::part(table-container) {
     overflow-x: auto !important;
-    width: 100% !important;
     max-width: 100% !important;
     -webkit-overflow-scrolling: touch !important;
 }
@@ -2642,581 +1668,186 @@ ak-user-token-list::part(toolbar) {
     gap: 8px !important;
 }
 
-/* === pf-tooltip element styling (light DOM tag, so reachable from doc level) */
+/* Table search */
+:host(ak-table-search) .pf-c-form-control,
+:host(ak-table-search) input[type="search"] {
+    color: var(--glass-text) !important;
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 8px !important;
+}
+
+:host(ak-table-search) .pf-c-form-control:hover,
+:host(ak-table-search) input[type="search"]:hover {
+    border-color: var(--ak-accent) !important;
+}
+
+/* Chips & labels (user interface only, admin untouched) */
+:host(ak-user-consent-list) ak-chip::part(chip),
+:host(ak-user-token-list) ak-chip::part(chip),
+:host(ak-user-settings-mfa) ak-chip::part(chip),
+:host(ak-user-session-list) ak-chip::part(chip),
+:host(ak-user-reputation-list) ak-chip::part(chip) {
+    color: var(--glass-text) !important;
+    background: #333 !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 12px !important;
+}
+
+:host(ak-user-consent-list) .pf-c-chip,
+:host(ak-user-token-list) .pf-c-chip,
+:host(ak-user-session-list) .pf-c-chip {
+    --pf-c-chip--BackgroundColor: #333;
+    --pf-c-chip__text--Color: var(--glass-text);
+}
+
+:host(ak-user-session-list) .pf-c-label.pf-m-green,
+:host(ak-user-token-list) .pf-c-label.pf-m-green,
+:host(ak-user-settings-mfa) .pf-c-label.pf-m-green {
+    --pf-c-label--BackgroundColor: #1c1c1c;
+    --pf-c-label__icon--Color: #4d9144;
+    --pf-c-label--m-outline__content--before--BorderColor: #3f453f;
+}
+
+:host(ak-user-session-list) .pf-c-label.pf-m-gray,
+:host(ak-user-token-list) .pf-c-label.pf-m-gray,
+:host(ak-user-settings-mfa) .pf-c-label.pf-m-gray {
+    --pf-c-label--BackgroundColor: #1a1a1a;
+}
+
 pf-tooltip {
     --pf-c-tooltip--BackgroundColor: rgba(20, 20, 30, 0.95);
-    --pf-c-tooltip__content--Color: white;
+    --pf-c-tooltip__content--Color: var(--glass-text);
     --pf-v5-c-tooltip--BackgroundColor: rgba(20, 20, 30, 0.95);
-    --pf-v5-c-tooltip__content--Color: white;
-    color: white;
+    --pf-v5-c-tooltip__content--Color: var(--glass-text);
 }
 
-/* ========================================= */
-/* === STATIC ERROR PAGES (no shadow DOM) === */
-/* ========================================= */
-/* Authentik's error pages (e.g. "Client ID Error", "Permission Denied", flow
-   not found, etc.) are rendered as static HTML in the light DOM — no
-   <ak-flow-executor>, no Shadow Parts. Our ::part() and :host() rules don't
-   apply here. We need plain selectors targeting the static structure. */
 
-/* Cap branding logo size everywhere — was unset, so static pages rendered the
-   native PNG size (huge). Also applies inside flows for consistency. */
-.branding-logo,
-img.branding-logo,
-.pf-c-brand img,
-.pf-c-login__main-header.pf-c-brand img {
-    /* Equal max-width and max-height = square envelope.
-       object-fit: contain preserves the logo's aspect ratio:
-       - Square logos (1:1) fill the full 220x220 box
-       - Landscape wordmarks fill the width, height auto-adjusts
-       - Portrait logos fill the height, width auto-adjusts */
-    max-width: 220px !important;
-    max-height: 220px !important;
-    width: auto !important;
-    height: auto !important;
-    object-fit: contain !important;
-    margin: 0 auto 16px auto !important;
-    display: block !important;
+/* ========================================================================== */
+/* 8. ADMIN INTERFACE: keep it opaque & readable                              */
+/* ========================================================================== */
+
+:host(ak-interface-admin) .pf-c-page {
+    background-image: none !important;
+    background-color: var(--pf-global--BackgroundColor--100) !important;
 }
 
-/* ========================================= */
-/* === HEADER BRAND LOGO (top-left, user + admin interfaces) === */
-/* ========================================= */
-/* The header logo (<img class="pf-c-brand">) lives inside the shadow DOM of
-   <ak-interface-user> or <ak-interface-admin>. The wrapper <div part="brand">
-   is exposed via ::part(), so we enlarge it. The <img> itself uses PatternFly
-   CSS variables we can override at :root (they inherit through shadow roots). */
-
-ak-interface-user::part(brand),
-ak-interface-user-presentation::part(brand),
 ak-interface-admin::part(brand) {
-    min-height: 70px !important;
-    height: auto !important;
-    padding: 6px 0 !important;
     display: flex !important;
     align-items: center !important;
 }
 
-/* PatternFly variables controlling the header brand logo size.
-   These inherit through the shadow root and the logo <img> picks them up. */
-:root,
-html,
-body {
-    --pf-c-page__header-brand--c-brand--MaxHeight: 60px;
-    --pf-c-page__header-brand--c-brand--Height: 60px;
-    --pf-c-brand--Height: 60px;
-    --pf-c-brand--MaxHeight: 60px;
-}
 
-/* Fallback selectors in case Authentik DOES inject CSS into the interface
-   shadow roots — these match the <img> directly. */
-img.pf-c-brand,
-.pf-c-page__header-brand img,
-.pf-c-page__header-brand-link img {
-    max-height: 60px !important;
-    height: auto !important;
-    width: auto !important;
-    max-width: 200px !important;
-    object-fit: contain !important;
-}
+/* ========================================================================== */
+/* 9. RESPONSIVE                                                              */
+/* ========================================================================== */
 
-/* Center the .pf-c-login box on static pages (no ak-flow-executor wrapper).
-   We use :not(:has(ak-flow-executor)) to scope to error pages only. */
-body:not(:has(ak-flow-executor)) .pf-c-page__drawer,
-body:not(:has(ak-flow-executor)) .pf-c-drawer,
-body:not(:has(ak-flow-executor)) .pf-c-drawer__main,
-body:not(:has(ak-flow-executor)) .pf-c-drawer__content,
-body:not(:has(ak-flow-executor)) .pf-c-drawer__body {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    min-height: 100vh !important;
-    width: 100vw !important;
-    max-width: 100vw !important;
-    box-sizing: border-box !important;
-    padding: 20px !important;
-    overflow: hidden !important;
-}
-
-body:not(:has(ak-flow-executor)) .pf-c-login {
-    width: 90% !important;
-    max-width: 480px !important;
-    margin: 0 auto !important;
-    background: transparent !important;
-}
-
-body:not(:has(ak-flow-executor)) .pf-c-login__main {
-    background: rgba(15, 20, 35, 0.55) !important;
-    backdrop-filter: blur(40px) saturate(160%) !important;
-    -webkit-backdrop-filter: blur(40px) saturate(160%) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    border-radius: 24px !important;
-    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
-    padding: 36px 32px !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-    color: white !important;
-}
-
-body:not(:has(ak-flow-executor)) .pf-c-login__main-header {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    margin-bottom: 20px !important;
-}
-
-body:not(:has(ak-flow-executor)) .pf-c-login__main-header.pf-c-brand {
-    margin-bottom: 16px !important;
-}
-
-body:not(:has(ak-flow-executor)) .pf-c-title {
-    color: white !important;
-    text-align: center !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
-    margin-bottom: 16px !important;
-    font-size: 24px !important;
-    font-weight: 600 !important;
-}
-
-body:not(:has(ak-flow-executor)) .pf-c-login__main-body {
-    color: white !important;
-    text-align: center !important;
-}
-
-body:not(:has(ak-flow-executor)) .pf-c-login__main-body p {
-    color: rgba(255, 255, 255, 0.85) !important;
-    margin-bottom: 20px !important;
-    line-height: 1.5 !important;
-    text-align: center !important;
-}
-
-/* Buttons on static error pages — apply the same glass styling we use for
-   login flow buttons, but via plain class selectors (no :host()). */
-body:not(:has(ak-flow-executor)) .pf-c-login .pf-c-button.pf-m-primary,
-body:not(:has(ak-flow-executor)) .pf-c-button.pf-m-primary.pf-m-block,
-body:not(:has(ak-flow-executor)) a.pf-c-button.pf-m-primary {
-    background: rgba(255, 255, 255, 0.15) !important;
-    background-color: rgba(255, 255, 255, 0.15) !important;
-    color: white !important;
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    border-radius: 14px !important;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
-    padding: 12px 24px !important;
-    font-weight: 600 !important;
-    font-size: 15px !important;
-    text-transform: none !important;
-    text-decoration: none !important;
-    transition: all 0.3s ease !important;
-    display: inline-block !important;
-    text-align: center !important;
-}
-
-body:not(:has(ak-flow-executor)) .pf-c-login .pf-c-button.pf-m-primary:hover,
-body:not(:has(ak-flow-executor)) .pf-c-button.pf-m-primary.pf-m-block:hover,
-body:not(:has(ak-flow-executor)) a.pf-c-button.pf-m-primary:hover {
-    background: rgba(255, 255, 255, 0.25) !important;
-    border-color: rgba(255, 255, 255, 0.4) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
-    color: white !important;
-    text-decoration: none !important;
-}
-
-body:not(:has(ak-flow-executor)) .pf-c-form__group {
-    text-align: center !important;
-    margin-top: 8px !important;
-}
-
-/* Footer on static pages */
-body:not(:has(ak-flow-executor)) .pf-c-login__footer {
-    background: transparent !important;
-    text-align: center !important;
-    margin-top: 20px !important;
-    color: rgba(255, 255, 255, 0.6) !important;
-}
-
-body:not(:has(ak-flow-executor)) .pf-c-login__footer .pf-c-list {
-    display: none !important;
-}
-
-/* ===== RESPONSIVE MOBILE ===== */
+/* --- Tablets & phones --- */
 @media (max-width: 768px) {
-
-    /* Stack form action buttons vertically on small screens */
-    .pf-c-login .pf-c-form__actions,
-    body:has(.pf-c-login) .pf-c-form__actions {
-        flex-direction: column !important;
-        gap: 12px !important;
-    }
-
-    /* User-login stage buttons (Stay connected? Yes/No) — full width on mobile */
-    :host(ak-stage-user-login) .pf-c-button.pf-m-primary,
-    :host(ak-stage-user-login) .pf-c-button.pf-m-secondary {
-        width: 100% !important;
-        min-width: auto !important;
-        padding: 14px 28px !important;
-    }
-
-    /* Mobile: glassmorphism on the shadow-DOM <main> via shadow part.
-       Also prevent horizontal overflow caused by long button labels like
-       "Sélectionnez une autre méthode d'authentification". */
-    ak-flow-executor::part(main) {
-        background: rgba(20, 20, 30, 0.45) !important;
-        backdrop-filter: blur(18px) saturate(140%) !important;
-        -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
-        border-radius: 20px !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        padding: 28px 20px !important;
-        box-sizing: border-box !important;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
-        width: calc(100vw - 24px) !important;
-        max-width: calc(100vw - 24px) !important;
-        overflow-x: hidden !important;
-        word-wrap: break-word !important;
-        overflow-wrap: break-word !important;
-    }
-
-    /* Mobile: same horizontal centering as desktop (left: 50vw + translateX(-50%))
-       — only adjust the top offset and sizes. */
-    ak-locale-select,
-    ak-flow-executor::part(locale-select) {
-        top: 10px !important;
-        left: 50vw !important;
-        right: auto !important;
-        transform: translateX(-50%) !important;
-        max-width: 240px !important;
-        min-width: 180px !important;
-        padding: 5px 12px !important;
-    }
-
-    ak-flow-executor::part(locale-select-select) {
-        max-width: 180px !important;
-        min-width: 130px !important;
-        font-size: 14px !important;
-    }
-
-    ak-flow-executor::part(locale-select-label) {
-        width: 18px !important;
-        height: 18px !important;
-    }
-
-    /* Allow buttons to wrap their text (the "Sélectionnez une autre méthode
-       d'authentification" button is what creates the horizontal scroll). */
-    .pf-c-button.pf-m-block {
-        white-space: normal !important;
-        word-wrap: break-word !important;
-        overflow-wrap: break-word !important;
-        line-height: 1.3 !important;
-        text-align: center !important;
-        min-height: 40px !important;
-        height: auto !important;
-        padding: 10px 14px !important;
-    }
-
-    /* Globally prevent horizontal overflow on the body */
-    html,
-    body {
-        overflow-x: hidden !important;
-        max-width: 100vw !important;
-    }
-
-    /* Mobile: shrink fonts and paddings in user-settings tables so columns
-       don't overflow/overlap. Tables can horizontally scroll thanks to the
-       ::part(table-container) overflow-x rule above. */
-    :root,
-    html,
-    body {
-        --pf-c-table--cell--FontSize: 12px;
-        --pf-c-table--cell--PaddingTop: 8px;
-        --pf-c-table--cell--PaddingBottom: 8px;
+    :root {
+        --glass-card-radius: 20px;
+        --glass-card-blur: blur(22px) saturate(140%);
+        --pf-c-table--cell--FontSize: 13px;
         --pf-c-table--cell--PaddingLeft: 8px;
         --pf-c-table--cell--PaddingRight: 8px;
-        --pf-c-table-thead--cell--FontSize: 12px;
-        --pf-c-form-control--FontSize: 14px;
     }
 
-    /* Mobile cards in user-settings: full-width with margin */
-    :host(ak-user-settings) .pf-c-card,
-    ak-user-settings .pf-c-card {
-        margin: 8px 4px !important;
-        padding: 12px !important;
-    }
-
-    /* Hide pf-tooltip on mobile — they're flaky and the icons are self-explanatory */
-    pf-tooltip {
-        --pf-c-tooltip--MaxWidth: 200px;
-        font-size: 12px;
-    }
-
-    /* Force le background de la page sur mobile */
-    .pf-c-page,
-    body,
-    .pf-c-login .pf-c-page,
-    body:has(.pf-c-login) .pf-c-page {
-        background: transparent !important;
-        background-color: transparent !important;
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        overflow: hidden !important;
-    }
-
-    /* Background flouté sur un pseudo-élément */
-    .pf-c-page::before,
-    body::before,
-    .pf-c-login .pf-c-page::before,
-    body:has(.pf-c-login)::before {
-        content: '' !important;
-        position: fixed !important;
-        top: -10px !important;
-        left: -10px !important;
-        right: -10px !important;
-        bottom: -10px !important;
-        width: calc(100vw + 20px) !important;
-        height: calc(100vh + 20px) !important;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-        background-image: var(--ak-flow-background) !important;
-        background-size: cover !important;
-        background-position: center !important;
-        background-repeat: no-repeat !important;
-        filter: blur(8px) !important;
-        -webkit-filter: blur(8px) !important;
-        z-index: -1 !important;
-    }
-
-    /* Force .pf-c-login à prendre toute la largeur sur mobile */
-    .pf-c-login {
-        width: 100vw !important;
-        max-width: 100vw !important;
-        min-width: 100vw !important;
-        height: 100vh !important;
-        min-height: 100vh !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        overflow-x: hidden !important;
-        overflow-y: auto !important;
-    }
-
-    /* Supprime le scroll et margin en bas */
-    body,
-    html {
-        overflow-x: hidden !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-    }
-
-    /* Box login plein écran sur mobile - TRANSPARENTE */
-    .pf-c-login .pf-c-login__container,
-    body .pf-c-login .pf-c-login__container,
-    body:has(.pf-c-login) .pf-c-login__container {
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 100% !important;
-        box-sizing: border-box !important;
-
-        /* Mobile Centering Fix: Stop forcing full height/fixed pos */
-        height: auto !important;
-        min-height: 0 !important;
-        position: relative !important;
-        margin: auto !important;
-        /* Enable centering */
-
-        border-radius: 0 !important;
-        border: none !important;
-        padding: 20px !important;
-
-        background: transparent !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-        box-shadow: none !important;
-
-        /* Reset Fixed positioning props */
-        top: auto !important;
-        left: auto !important;
-        right: auto !important;
-        bottom: auto !important;
-
-        z-index: 1 !important;
-        overflow-y: visible !important;
-    }
-
-    .pf-c-login .pf-c-login__main,
-    body .pf-c-login .pf-c-login__main,
-    body:has(.pf-c-login) .pf-c-login__main {
-        width: 100% !important;
-        max-width: 100% !important;
-        box-sizing: border-box !important;
-        border-radius: 0 !important;
-        border: none !important;
-        padding: 30px 20px !important;
-        min-height: auto !important;
-        max-height: none !important;
-        /* Complètement transparent - juste le contenu */
-        background: transparent !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-        box-shadow: none !important;
-        position: relative !important;
-        z-index: 2 !important;
-
-        /* FIX: Reset potential PatternFly margins that push it down */
-        margin: auto !important;
-        margin-top: auto !important;
-        margin-bottom: auto !important;
-    }
-
-    /* Supprime les espaces du footer */
-    .pf-c-login__footer,
-    .pf-c-login__main-footer {
-        padding-bottom: 0 !important;
-        margin-bottom: 0 !important;
-    }
-
-    /* Boutons plus grands sur mobile */
-    .pf-c-login .pf-c-form__actions button:first-child,
-    .pf-c-login .pf-c-form__group-control button:first-child,
-    :host(ak-stage-identification) .pf-c-button.pf-m-primary,
-    :host(ak-stage-identification) button[type="submit"].pf-c-button.pf-m-primary {
-        width: 100% !important;
-        padding: 16px 24px !important;
-        font-size: 16px !important;
-    }
-
-    /* Inputs plus grands */
-    :host(ak-stage-identification) .pf-c-form-control,
-    :host(ak-stage-password) .pf-c-form-control,
-    :host(ak-stage-identification) input:not([type="checkbox"]),
-    :host(ak-stage-password) input:not([type="checkbox"]) {
-        padding: 14px 16px !important;
-        font-size: 16px !important;
-        min-height: 50px !important;
-    }
-
-    /* Boutons sociaux alignés horizontalement (max 4 par ligne) */
-    .pf-c-login__main-footer-links {
-        flex-direction: row !important;
-        flex-wrap: wrap !important;
-        justify-content: center !important;
-        gap: 10px !important;
-    }
-
-
-
-
-
-    .pf-c-login__main-footer-links-item button {
-        /* Compact buttons for row of 4 */
-        width: auto !important;
-        min-width: 60px !important;
-        /* Ensure touch target */
-        flex: 1 1 auto !important;
-        /* Grow slightly to fill row */
-        max-width: 80px !important;
-        /* Don't get too big */
-
-        font-size: 15px !important;
-        padding: 10px 10px !important;
-        /* Reduced padding */
-    }
-
-    .pf-c-login__main-footer-links-item button img {
-        width: 18px !important;
-        height: 18px !important;
-    }
-
-    /* Overlay de chargement plein écran sur mobile */
-    ak-loading-overlay {
-        border-radius: 0 !important;
-    }
-
-    /* ========================================= */
-    /* === FIX DASHBOARD MOBILE (Background) === */
-    /* ========================================= */
-
-    /* Force l'image de fond visible sur html/body/dashboard */
-    html,
-    body,
-    :host(ak-interface-user),
-    :host(ak-library-impl),
-    .pf-c-page {
-        background-color: #151515 !important;
-        /* fallback */
-        background-image: var(--ak-flow-background) !important;
-        background-size: cover !important;
-        background-position: center !important;
-        background-repeat: no-repeat !important;
-        /* iOS Fix: Mobile scroll behavior to avoid jitter/locks */
-        background-attachment: scroll !important;
-        min-height: 100dvh !important;
-        position: relative !important;
-    }
-
-    /* Fix Login Container Padding on Mobile */
-    .pf-c-login .pf-c-login__container {
-        padding: 10px 15px 20px 15px !important;
-        min-width: auto !important;
-        width: 100% !important;
-        border: none !important;
-        box-shadow: none !important;
-    }
-
-    .pf-c-login .pf-c-login__main {
-        padding: 25px 20px !important;
-        width: 100% !important;
-        border-radius: 20px !important;
-    }
-
-    /* Mais garde la transparence sur les conteneurs intermédiaires */
-    :host(ak-library-impl) .pf-c-page,
-    :host(ak-library-impl) .pf-c-page__main,
-    .pf-c-page__main,
-    .pf-c-page__main-section,
-    .pf-c-page__drawer,
-    .pf-c-drawer__content,
-    .pf-c-drawer__main,
-    :host(ak-library-impl) .pf-l-gallery {
-        background: transparent !important;
-        background-color: transparent !important;
-    }
-
-    /* ========================================= */
-    /* === FIX DASHBOARD MOBILE (Grid 2 cols) == */
-    /* ========================================= */
-
-    /* Force 2 colonnes pour la grille d'apps sur mobile */
+    /* Library: 2 columns of compact app cards */
     :host(ak-library-impl) .pf-l-gallery {
         display: grid !important;
-        grid-template-columns: repeat(2, 1fr) !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         gap: 10px !important;
     }
 
-    /* Ajuste la taille des cartes pour qu'elles rentrent */
     :host(ak-library-impl) .pf-c-card.pf-m-hoverable {
         min-height: 120px !important;
-        padding: 10px !important;
         width: 100% !important;
         max-width: 100% !important;
     }
 
-    /* Réduit un peu la taille de l'icône dans la carte si nécessaire */
     :host(ak-library-impl) .pf-c-card__body img {
         max-width: 40px !important;
         max-height: 40px !important;
+    }
+
+    :host(ak-user-settings) .pf-c-card {
+        margin: 8px 0 !important;
+    }
+}
+
+/* --- Phones (Authentik's own mobile breakpoint is 35rem = 560px) --- */
+@media (max-width: 35rem) {
+    .pf-c-login {
+        padding-inline: 12px !important;
+        grid-template-rows:
+            [header] minmax(3.5rem, 1fr)
+            [main] auto
+            [footer] minmax(min-content, 1fr) !important;
+    }
+
+    .pf-c-login__main {
+        --pf-c-login__main-body--PaddingLeft: 20px;
+        --pf-c-login__main-body--PaddingRight: 20px;
+        --pf-c-login__main-header--PaddingLeft: 20px;
+        --pf-c-login__main-header--PaddingRight: 20px;
+    }
+
+    .pf-c-login__main-header.pf-c-brand .branding-logo,
+    .pf-c-login__main-header.pf-c-brand img {
+        max-height: clamp(64px, 18dvh, 160px) !important;
+    }
+
+    /* Social buttons: one per row when the label is long */
+    ak-flow-card .source-button {
+        flex-basis: 100% !important;
+    }
+
+    ak-flow-card fieldset[name="login-sources"]::before {
+        background-size: calc(50% - 5em) 1px, calc(50% - 5em) 1px;
+    }
+
+    /* Yes / No stacked */
+    :host(ak-stage-user-login) fieldset.pf-m-action .pf-c-button {
+        flex-basis: 100% !important;
+    }
+}
+
+/* --- Short screens (landscape phones): smaller logo, tighter spacing --- */
+@media (max-height: 560px) {
+    .pf-c-login {
+        grid-template-rows:
+            [header] minmax(3.25rem, auto)
+            [main] auto
+            [footer] minmax(min-content, 1fr) !important;
+    }
+
+    .pf-c-login__main-header.pf-c-brand {
+        padding-block-start: 12px !important;
+    }
+
+    .pf-c-login__main-header.pf-c-brand .branding-logo,
+    .pf-c-login__main-header.pf-c-brand img {
+        max-height: 64px !important;
+    }
+}
+
+/* --- Accessibility --- */
+@media (prefers-reduced-motion: reduce) {
+    ak-flow-card .pf-c-button,
+    ak-flow-card .source-button,
+    :host(ak-library-impl) .pf-c-card {
+        transition: none !important;
+        transform: none !important;
+    }
+
+    ak-flow-card .pf-c-button.pf-m-primary::before {
+        display: none !important;
+    }
+}
+
+/* No backdrop-filter (old browsers / some Linux GPUs): more opaque card */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    :root {
+        --glass-card-bg: rgba(15, 20, 35, 0.88);
     }
 }
