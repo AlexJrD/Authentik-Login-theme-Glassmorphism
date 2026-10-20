@@ -1261,6 +1261,12 @@ ak-interface-user::part(page__header),
     backdrop-filter: blur(18px) !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
     box-shadow: none !important;
+    /* The user menu (Sign out...) drops down from this header over the page.
+       The library page has its own .pf-c-page__header (search bar, PF z-index
+       300) and the glass effects create extra stacking contexts: pin the main
+       header above all page content so its dropdown stays clickable. */
+    position: relative !important;
+    z-index: 1000 !important;
 }
 
 ak-interface-user::part(brand) {
